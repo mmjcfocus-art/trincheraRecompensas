@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xbox Lounge - Loyalty System Pro</title>
-    <!-- Tailwind CSS para diseño ágil y de alta fidelidad -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap');
         
@@ -17,7 +21,6 @@
             font-family: 'Share Tech Mono', monospace;
         }
 
-        /* Animaciones personalizadas para micro-interacciones */
         @keyframes pulse-ring {
             0% { transform: scale(0.95); opacity: 0.8; }
             50% { transform: scale(1.06); opacity: 0.4; }
@@ -36,7 +39,6 @@
             pointer-events: none;
         }
 
-        /* Levitación de elementos gamer */
         @keyframes float-gamepad {
             0% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-8px) rotate(1deg); }
@@ -46,7 +48,6 @@
             animation: float-gamepad 4s infinite ease-in-out;
         }
 
-        /* Resplandores de neón gamer */
         .neon-glow-green {
             box-shadow: 0 0 25px rgba(16, 124, 16, 0.25);
         }
@@ -54,7 +55,6 @@
             box-shadow: 0 10px 40px -10px rgba(16, 124, 16, 0.15);
         }
 
-        /* Transiciones suaves */
         .animate-fade-in {
             animation: fadeIn 0.3s ease-in-out;
         }
@@ -66,7 +66,7 @@
 </head>
 <body class="bg-gradient-to-tr from-slate-950 via-slate-900 to-[#041a04] text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
 
-    <!-- BARRA DE NAVEGACIÓN SUPERIOR -->
+    <!-- BARRA DE NAVEGACIÓN -->
     <nav class="bg-slate-900/85 backdrop-blur-md border-b border-emerald-500/10 p-4 sticky top-0 z-40 transition-all duration-300">
         <div class="max-w-6xl mx-auto flex justify-between items-center gap-2">
             <div onclick="switchView('view-home')" class="flex items-center gap-2 cursor-pointer group shrink-0">
@@ -87,7 +87,7 @@
         </div>
     </nav>
 
-    <!-- COMPONENTES DE NOTIFICACIÓN Y DIÁLOGOS PERSONALIZADOS -->
+    <!-- TOAST Y MODALES -->
     <div id="toast-container" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 flex flex-col gap-2 max-w-sm w-auto"></div>
 
     <div id="confirm-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -108,14 +108,12 @@
         </div>
     </div>
 
-    <!-- MAIN APP WRAPPER -->
+    <!-- MAIN -->
     <main class="max-w-6xl mx-auto p-4 sm:p-6 md:p-8 w-full flex-grow flex flex-col justify-center">
 
-        <!-- 1. PANTALLA DE INICIO -->
+        <!-- 1. INICIO -->
         <section id="view-home" class="py-2 sm:py-6 md:py-12 animate-fade-in space-y-8 sm:space-y-12">
-            
             <div class="grid md:grid-cols-12 gap-6 md:gap-8 items-center">
-                <!-- Textos Principales del Hero -->
                 <div class="md:col-span-7 space-y-4 sm:space-y-6 text-center md:text-left order-2 md:order-1">
                     <span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-extrabold text-[10px] sm:text-xs uppercase px-3 sm:px-4 py-1.5 rounded-full tracking-wider inline-block">🎁 ¡Recompensa Activa!</span>
                     <h2 class="text-3xl sm:text-4xl md:text-6xl font-black text-white tracking-tight leading-tight">
@@ -125,7 +123,6 @@
                     <p class="text-slate-400 text-sm sm:text-base md:text-lg max-w-xl mx-auto md:mx-0">
                         Únete a nuestro club de lealtad definitivo. Registra tus visitas con el encargado de sala, reúne tus 5 sellos de juego y desbloquea consolas gratis al instante.
                     </p>
-                    
                     <div class="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
                         <button onclick="switchView('view-user-login')" class="bg-gradient-to-r from-[#107C10] to-emerald-600 hover:brightness-110 text-white font-bold text-sm sm:text-base px-5 sm:px-6 py-3 rounded-2xl transition-all shadow-lg shadow-emerald-700/20 transform hover:-translate-y-0.5 active:scale-95 cursor-pointer w-full sm:w-auto">
                             Ver mis Sellos
@@ -135,8 +132,6 @@
                         </a>
                     </div>
                 </div>
-
-                <!-- Ilustración Vectorial Gamer de Xbox -->
                 <div class="md:col-span-5 flex justify-center relative order-1 md:order-2">
                     <div class="absolute -inset-6 sm:-inset-10 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
                     <div class="w-full max-w-[240px] sm:max-w-[340px] md:max-w-md floating-art">
@@ -218,7 +213,6 @@
                 </div>
             </div>
 
-            <!-- Selector de Roles -->
             <div id="roles" class="grid sm:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto pt-6">
                 <div onclick="switchView('view-user-login')" class="bg-slate-900/40 border border-slate-800 p-6 sm:p-8 rounded-3xl neon-glow-card hover:bg-slate-900/60 hover:border-emerald-500/40 hover:shadow-emerald-950/20 transition-all duration-300 cursor-pointer group text-center space-y-4 transform hover:-translate-y-1">
                     <div class="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto transition-all group-hover:scale-110 shadow-lg shadow-emerald-500/10">
@@ -235,7 +229,6 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                     </span>
                 </div>
-
                 <div onclick="switchView('view-admin-login')" class="bg-slate-900/40 border border-slate-800 p-6 sm:p-8 rounded-3xl hover:bg-slate-900/60 hover:border-slate-700 transition-all duration-300 cursor-pointer group text-center space-y-4 transform hover:-translate-y-1">
                     <div class="w-14 h-14 sm:w-16 sm:h-16 bg-slate-800 border border-slate-700 text-slate-400 rounded-2xl flex items-center justify-center mx-auto transition-all group-hover:scale-110">
                         <svg class="w-7 h-7 sm:w-8 sm:h-8 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
@@ -254,7 +247,7 @@
             </div>
         </section>
 
-        <!-- 2. LOGIN USUARIO Y REGISTRO -->
+        <!-- 2. LOGIN USUARIO -->
         <section id="view-user-login" class="hidden max-w-md mx-auto w-full animate-fade-in space-y-6">
             <div class="bg-slate-900 p-1 rounded-2xl flex border border-slate-800">
                 <button id="tab-login" onclick="toggleAuthTabs('login')" class="flex-1 text-center py-2.5 rounded-xl text-xs font-extrabold cursor-pointer transition-all bg-emerald-600 text-white shadow-sm shadow-emerald-700/20">Ingresar</button>
@@ -263,12 +256,10 @@
 
             <div id="card-login" class="bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6 relative overflow-hidden">
                 <div class="absolute -right-24 -top-24 w-48 h-48 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
-                
                 <div class="text-center sm:text-left space-y-1">
                     <h2 class="text-xl sm:text-2xl font-black text-white">Ingresa a tu Perfil</h2>
                     <p class="text-slate-400 text-xs">Presenta tus accesos para monitorizar tus recompensas.</p>
                 </div>
-                
                 <form onsubmit="handleUserLogin(event)" class="space-y-4">
                     <div>
                         <label class="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Tu Correo Electrónico</label>
@@ -278,7 +269,6 @@
                         <label class="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Contraseña de acceso</label>
                         <input type="password" id="login-user-pass" value="123" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all">
                     </div>
-                    
                     <div class="bg-emerald-950/20 border border-emerald-800/30 p-3 rounded-2xl flex justify-between items-center gap-2">
                         <div class="min-w-0">
                             <span class="block text-[9px] text-emerald-400 uppercase font-black tracking-wider">Cliente de Prueba (Joan)</span>
@@ -288,7 +278,6 @@
                             Rellenar
                         </button>
                     </div>
-
                     <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-[#107C10] hover:brightness-110 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-700/20 cursor-pointer transform active:scale-[0.98]">
                         Iniciar sesión gamer
                     </button>
@@ -324,14 +313,13 @@
             </div>
         </section>
 
-        <!-- 3. LOGIN ADMINISTRADOR -->
+        <!-- 3. LOGIN ADMIN -->
         <section id="view-admin-login" class="hidden max-w-md mx-auto w-full animate-fade-in">
             <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
                 <div class="text-center space-y-2">
                     <span class="text-[10px] font-black tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Acceso Autorizado</span>
                     <h2 class="text-xl sm:text-2xl font-black text-white">Consola de Operador</h2>
                 </div>
-                
                 <form onsubmit="handleAdminLogin(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold uppercase text-slate-400 mb-1.5">ID del Operador</label>
@@ -345,7 +333,6 @@
                         Establecer Conexión
                     </button>
                 </form>
-                
                 <div class="bg-slate-950 border border-slate-850 p-3 rounded-xl text-center">
                     <span class="block text-[10px] text-slate-400 uppercase font-bold">Credenciales demo</span>
                     <code class="text-xs text-emerald-400 font-mono">admin@xbox.com | admin123</code>
@@ -353,11 +340,10 @@
             </div>
         </section>
 
-        <!-- 4. PERFIL / PANEL DE TARJETA DIGITAL DEL CLIENTE -->
+        <!-- 4. PERFIL USUARIO -->
         <section id="view-user-dashboard" class="hidden max-w-3xl mx-auto w-full space-y-6 animate-fade-in">
             <div class="bg-slate-900 p-4 sm:p-6 rounded-3xl border border-slate-800 shadow-2xl flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6 relative overflow-hidden">
                 <div class="absolute -right-16 -bottom-16 w-36 h-36 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
-                
                 <div class="flex flex-col sm:flex-row items-center sm:items-start md:items-center text-center sm:text-left gap-4">
                     <div id="user-avatar-container" class="relative shrink-0"></div>
                     <div class="space-y-1.5 min-w-0">
@@ -368,7 +354,6 @@
                         <div id="user-dash-info" class="text-xs text-slate-400 font-medium"></div>
                     </div>
                 </div>
-
                 <div class="bg-slate-950 border border-slate-850 p-4 rounded-2xl min-w-[160px] text-center shadow-inner flex flex-col justify-center relative z-10">
                     <span class="block text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">Horas de Regalo</span>
                     <div class="flex items-center justify-center gap-1.5">
@@ -380,19 +365,16 @@
 
             <div class="bg-slate-900 p-5 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl text-center space-y-6 sm:space-y-8 relative overflow-hidden">
                 <div class="absolute inset-0 bg-[linear-gradient(to_right,#107c100d_1px,transparent_1px),linear-gradient(to_bottom,#107c100d_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none"></div>
-                
                 <div>
                     <h3 class="text-lg sm:text-xl font-extrabold text-white tracking-tight">Tu Tarjeta Digital de Fidelidad</h3>
                     <p class="text-xs sm:text-sm text-slate-400 mt-1">Sella cada visita jugando en sala. ¡El quinto sello te regala una hora de consola!</p>
                 </div>
-
                 <div class="grid grid-cols-5 gap-2 sm:gap-4 max-w-xl mx-auto py-1 relative z-10" id="stamps-container"></div>
-
                 <div id="user-alert-container" class="pt-2"></div>
             </div>
         </section>
 
-        <!-- 5. PANEL DE CONTROL ADMINISTRADOR (CRUD + CONTROL DE CONSUMOS) -->
+        <!-- 5. PANEL ADMIN -->
         <section id="view-admin-dashboard" class="hidden w-full space-y-6 animate-fade-in">
             <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-slate-900 p-4 sm:p-6 rounded-3xl border border-slate-800 shadow-2xl">
                 <div>
@@ -444,7 +426,7 @@
 
     </main>
 
-    <!-- MODAL DE OPERACIONES CRUD (CREAR / EDITAR) -->
+    <!-- MODAL CRUD -->
     <div id="user-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-40 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-8">
             <button onclick="closeUserModal()" class="absolute right-4 top-4 text-slate-400 hover:text-white cursor-pointer transition-colors p-1">
@@ -480,23 +462,41 @@
         </div>
     </div>
 
-    <!-- PIE DE PÁGINA -->
+    <!-- FOOTER -->
     <footer class="bg-slate-950/80 border-t border-slate-900 py-6 text-center text-xs text-slate-500 w-full mt-12">
         <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p>&copy; 2026 Xbox Lounge Loyalty Program. Todos los derechos reservados.</p>
             <div class="flex gap-4">
                 <span class="text-slate-600">Servicio Autorizado</span>
-                <span class="text-emerald-500/50">Online V2 Mobile-Ready</span>
+                <span class="text-emerald-500/50">Online V2 Firebase</span>
             </div>
         </div>
     </footer>
 
-    <!-- LOGICA DE CONTROL DE LA APP - VERSIÓN CORREGIDA Y MEJORADA -->
+    <!-- ============================================ -->
+    <!-- LOGICA DE LA APP CON FIREBASE                -->
+    <!-- ============================================ -->
     <script>
         // ============================================
-        // CONFIGURACIÓN Y CONSTANTES
+        // 🔥 CONFIGURACIÓN DE FIREBASE (YA CON TUS DATOS)
         // ============================================
-        const STORAGE_KEY = 'xbox_loyalty_db_v6';
+        const firebaseConfig = {
+            apiKey: "AIzaSyCmTUQa8MSDQPJ3Uz8PH1BKgOB3oM-WaX0",
+            authDomain: "latrincheraloyalty.firebaseapp.com",
+            databaseURL: "https://latrincheraloyalty-default-rtdb.firebaseio.com",
+            projectId: "latrincheraloyalty",
+            storageBucket: "latrincheraloyalty.firebasestorage.app",
+            messagingSenderId: "387143959227",
+            appId: "1:387143959227:web:5a6444e019c7b6fcbb9f9e"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // ============================================
+        // CONSTANTES Y CONFIGURACIÓN
+        // ============================================
         const MAX_STAMPS = 5;
         const MAX_REWARD_HOURS = 10;
         const MIN_PASSWORD_LENGTH = 3;
@@ -510,7 +510,7 @@
         let currentUser = null;
 
         // ============================================
-        // FUNCIONES AUXILIARES DE VALIDACIÓN
+        // FUNCIONES DE VALIDACIÓN
         // ============================================
         function validateEmail(email) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -539,81 +539,65 @@
         }
 
         // ============================================
-        // SISTEMA DE BASE DE DATOS MEJORADO
+        // FUNCIONES DE BASE DE DATOS FIREBASE
         // ============================================
-        function getDB() {
-            try {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                
-                if (!stored) {
+
+        function initializeDatabase() {
+            const dbRef = database.ref('users');
+            dbRef.once('value', (snapshot) => {
+                if (!snapshot.exists()) {
                     console.log('🆕 Inicializando DB con usuarios semilla');
-                    const fresh = SEED_USERS.map(u => ({...u}));
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-                    return fresh;
+                    const updates = {};
+                    SEED_USERS.forEach(user => {
+                        updates[user.id] = user;
+                    });
+                    dbRef.update(updates);
+                } else {
+                    console.log('✅ Base de datos ya inicializada');
                 }
-                
-                const parsed = JSON.parse(stored);
-                
-                if (!Array.isArray(parsed) || parsed.length === 0) {
-                    console.warn('⚠️ DB corrupta, restaurando...');
-                    const fresh = SEED_USERS.map(u => ({...u}));
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-                    return fresh;
-                }
-                
-                const validUsers = parsed.filter(u => isValidUser(u));
-                if (validUsers.length !== parsed.length) {
-                    console.warn('⚠️ Algunos usuarios estaban corruptos y fueron filtrados');
-                    saveDB(validUsers);
-                    return validUsers;
-                }
-                
-                return parsed;
-            } catch (error) {
-                console.error('❌ Error en getDB:', error);
-                const fresh = SEED_USERS.map(u => ({...u}));
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-                return fresh;
-            }
+            });
         }
 
-        function saveDB(data) {
-            try {
-                if (!Array.isArray(data)) {
-                    throw new Error('Datos inválidos: se esperaba un array');
+        function saveUser(user, callback) {
+            const userRef = database.ref('users/' + user.id);
+            userRef.set(user, (error) => {
+                if (error) {
+                    console.error('❌ Error guardando usuario:', error);
+                    showToast('Error al guardar datos', 'error');
+                } else {
+                    console.log('💾 Usuario guardado correctamente');
+                    if (callback) callback();
                 }
-                
-                data.forEach((user, index) => {
-                    if (!isValidUser(user)) {
-                        throw new Error(`Usuario en posición ${index} es inválido: ${JSON.stringify(user)}`);
-                    }
-                });
-                
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                console.log('💾 Datos guardados correctamente');
-                return true;
-            } catch (error) {
-                console.error('❌ Error guardando DB:', error);
-                showToast('Error al guardar datos: ' + error.message, 'error');
-                return false;
-            }
+            });
+        }
+
+        function deleteUser(userId, callback) {
+            const userRef = database.ref('users/' + userId);
+            userRef.remove((error) => {
+                if (error) {
+                    console.error('❌ Error eliminando usuario:', error);
+                    showToast('Error al eliminar usuario', 'error');
+                } else {
+                    console.log('🗑️ Usuario eliminado correctamente');
+                    if (callback) callback();
+                }
+            });
         }
 
         function resetDatabase() {
             if (confirm('⚠️ ¿Seguro que quieres resetear la base de datos? Se perderán todos los datos.')) {
-                const fresh = SEED_USERS.map(u => ({...u}));
-                saveDB(fresh);
-                currentUser = null;
-                showToast('🔄 Base de datos reiniciada con usuarios semilla', 'info');
-                if (!document.getElementById('view-admin-dashboard').classList.contains('hidden')) {
-                    renderAdminTable();
-                }
-                switchView('view-home');
+                const dbRef = database.ref('users');
+                dbRef.remove(() => {
+                    initializeDatabase();
+                    currentUser = null;
+                    showToast('🔄 Base de datos reiniciada con usuarios semilla', 'info');
+                    switchView('view-home');
+                });
             }
         }
 
         // ============================================
-        // SISTEMA DE TOASTS PERSONALIZADOS
+        // SISTEMA DE TOASTS
         // ============================================
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -640,16 +624,15 @@
         }
 
         // ============================================
-        // SISTEMA DE DIALOG DE CONFIRMACIÓN
+        // SISTEMA DE CONFIRMACIÓN
         // ============================================
         let currentConfirmAction = null;
-        
+
         function showConfirm(title, message, onConfirm) {
             const modal = document.getElementById('confirm-modal');
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-message').innerText = message;
             currentConfirmAction = onConfirm;
-            
             modal.classList.remove('hidden');
         }
 
@@ -665,12 +648,11 @@
         };
 
         // ============================================
-        // NAVEGACIÓN Y UTILIDADES
+        // NAVEGACIÓN
         // ============================================
         function switchView(viewId) {
             const views = ['view-home', 'view-user-login', 'view-admin-login', 'view-user-dashboard', 'view-admin-dashboard'];
             views.forEach(v => document.getElementById(v).classList.add('hidden'));
-            
             document.getElementById(viewId).classList.remove('hidden');
             
             if(viewId === 'view-user-dashboard' || viewId === 'view-admin-dashboard') {
@@ -680,6 +662,7 @@
             }
 
             if(viewId === 'view-admin-dashboard') renderAdminTable();
+            if(viewId === 'view-user-dashboard' && currentUser) renderUserDashboard();
         }
 
         function logout() {
@@ -714,7 +697,7 @@
         }
 
         // ============================================
-        // GENERADOR DE AVATARES GAMER
+        // AVATARES
         // ============================================
         function getGamerAvatarSvg(type = "helmet") {
             if (type === "cyborg") {
@@ -758,7 +741,7 @@
         }
 
         // ============================================
-        // MANEJADORES DE LOGIN MEJORADOS
+        // FUNCIONES DE LOGIN CON FIREBASE
         // ============================================
         function handleUserLogin(e) {
             e.preventDefault();
@@ -775,21 +758,25 @@
                 return;
             }
             
-            const db = getDB();
-            const user = db.find(u => 
-                u.correo.toLowerCase() === email.toLowerCase() && 
-                u.contrasena === pass
-            );
-            
-            if(user && isValidUser(user)) {
-                currentUser = {...user};
-                renderUserDashboard();
-                switchView('view-user-dashboard');
-                showToast(`¡Hola de nuevo, ${user.nombre}!`);
-                e.target.reset();
-            } else {
-                showToast("Correo o contraseña incorrectos", "error");
-            }
+            const dbRef = database.ref('users');
+            dbRef.orderByChild('correo').equalTo(email).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const users = Object.values(data);
+                    const user = users.find(u => u.contrasena === pass);
+                    if (user && isValidUser(user)) {
+                        currentUser = {...user};
+                        renderUserDashboard();
+                        switchView('view-user-dashboard');
+                        showToast(`¡Hola de nuevo, ${user.nombre}!`);
+                        e.target.reset();
+                    } else {
+                        showToast("Correo o contraseña incorrectos", "error");
+                    }
+                } else {
+                    showToast("Correo o contraseña incorrectos", "error");
+                }
+            });
         }
 
         function handleUserRegister(e) {
@@ -819,40 +806,44 @@
                 return;
             }
 
-            const db = getDB();
             const normalizedEmail = correo.toLowerCase();
             const sanitizedPhone = sanitizePhone(telefono);
             
-            if(db.some(u => u.correo.toLowerCase() === normalizedEmail)) {
-                showToast("Este correo ya está registrado en el sistema", "error");
-                return;
-            }
-            
-            if(db.some(u => u.telefono === sanitizedPhone)) {
-                showToast("Este teléfono ya está registrado", "error");
-                return;
-            }
+            const dbRef = database.ref('users');
+            dbRef.orderByChild('correo').equalTo(normalizedEmail).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    showToast("Este correo ya está registrado en el sistema", "error");
+                    return;
+                }
+                
+                dbRef.orderByChild('telefono').equalTo(sanitizedPhone).once('value', (phoneSnapshot) => {
+                    if (phoneSnapshot.exists()) {
+                        showToast("Este teléfono ya está registrado", "error");
+                        return;
+                    }
 
-            const avatars = ["helmet", "cyborg", "ninja"];
-            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+                    const avatars = ["helmet", "cyborg", "ninja"];
+                    const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
 
-            const newUser = { 
-                id: Date.now().toString(), 
-                nombre: sanitizeText(nombre), 
-                correo: normalizedEmail, 
-                telefono: sanitizedPhone, 
-                contrasena: contrasena, 
-                sellos: 0, 
-                horas_gratis: 0, 
-                avatar: randomAvatar,
-                fecha_registro: new Date().toISOString()
-            };
-            
-            db.push(newUser);
-            saveDB(db);
-            showToast("✅ Registro exitoso. ¡Inicia sesión para ver tu tarjeta!");
-            toggleAuthTabs('login');
-            e.target.reset();
+                    const newUser = { 
+                        id: Date.now().toString(), 
+                        nombre: sanitizeText(nombre), 
+                        correo: normalizedEmail, 
+                        telefono: sanitizedPhone, 
+                        contrasena: contrasena, 
+                        sellos: 0, 
+                        horas_gratis: 0, 
+                        avatar: randomAvatar,
+                        fecha_registro: new Date().toISOString()
+                    };
+                    
+                    saveUser(newUser, () => {
+                        showToast("✅ Registro exitoso. ¡Inicia sesión para ver tu tarjeta!");
+                        toggleAuthTabs('login');
+                        e.target.reset();
+                    });
+                });
+            });
         }
 
         function handleAdminLogin(e) {
@@ -864,13 +855,14 @@
                 switchView('view-admin-dashboard');
                 showToast("🔐 Acceso de Administrador concedido", "success");
                 e.target.reset();
+                renderAdminTable();
             } else {
                 showToast("❌ Llave de acceso inválida", "error");
             }
         }
 
         // ============================================
-        // DASHBOARD DE USUARIO MEJORADO
+        // DASHBOARD DE USUARIO (TIEMPO REAL)
         // ============================================
         function renderUserDashboard() {
             if (!currentUser || !currentUser.id) {
@@ -879,86 +871,88 @@
                 return;
             }
             
-            const db = getDB();
-            const user = db.find(u => u.id === currentUser.id);
-            
-            if (!user || !isValidUser(user)) {
-                showToast("Error: Usuario no encontrado en la base de datos", "error");
-                currentUser = null;
-                switchView('view-home');
-                return;
-            }
-            
-            currentUser = {...user};
-            
-            document.getElementById('user-avatar-container').innerHTML = getGamerAvatarSvg(user.avatar || "helmet");
-
-            const badgeEl = document.getElementById('user-tier-badge');
-            if (user.horas_gratis > 1) {
-                badgeEl.innerText = "RANK: ELITE SPARTAN";
-                badgeEl.className = "text-[9px] font-black text-white bg-amber-600/30 border border-amber-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider tech-font";
-            } else if (user.sellos > 2) {
-                badgeEl.innerText = "RANK: CYBER-SOLDIER";
-                badgeEl.className = "text-[9px] font-black text-white bg-blue-600/30 border border-blue-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider tech-font";
-            } else {
-                badgeEl.innerText = "RANK: ROOKIE GAMER";
-                badgeEl.className = "text-[9px] font-black text-white bg-emerald-600/30 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider tech-font";
-            }
-
-            document.getElementById('user-dash-name').innerText = user.nombre;
-            document.getElementById('user-dash-info').innerHTML = `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-center sm:justify-start gap-1.5 sm:gap-3 text-slate-400 mt-1">
-                    <span class="flex items-center justify-center sm:justify-start gap-1.5 break-all text-xs sm:text-sm">
-                        <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        ${user.correo}
-                    </span>
-                    <span class="hidden sm:inline text-slate-700">|</span>
-                    <span class="flex items-center justify-center sm:justify-start gap-1.5 font-mono text-xs sm:text-sm">
-                        <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                        ${user.telefono}
-                    </span>
-                </div>
-            `;
-
-            document.getElementById('user-dash-rewards').innerText = user.horas_gratis;
-
-            const container = document.getElementById('stamps-container');
-            container.innerHTML = '';
-            
-            for(let i = 1; i <= MAX_STAMPS; i++) {
-                const isFilled = i <= user.sellos;
-                const slot = document.createElement('div');
+            const userRef = database.ref('users/' + currentUser.id);
+            userRef.off();
+            userRef.on('value', (snapshot) => {
+                const user = snapshot.val();
+                if (!user || !isValidUser(user)) {
+                    showToast("Error: Usuario no encontrado en la base de datos", "error");
+                    currentUser = null;
+                    switchView('view-home');
+                    return;
+                }
                 
-                slot.className = `aspect-square rounded-2xl flex flex-col items-center justify-center border transition-all duration-500 transform p-1 sm:p-2 ${
-                    isFilled 
-                    ? 'bg-gradient-to-br from-emerald-500 via-green-600 to-emerald-800 border-emerald-400 text-white font-black shadow-[0_4px_15px_rgba(16,124,16,0.35)] scale-102 glowing-pulse' 
-                    : 'bg-slate-950 border-slate-800 text-slate-600 shadow-inner'
-                }`;
+                currentUser = {...user};
                 
-                slot.innerHTML = `
-                    <svg class="w-6 h-6 sm:w-10 sm:h-10 mb-0.5 sm:mb-1 transition-transform duration-300 ${isFilled ? 'scale-105' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.5 12.5H12.5M9.5 12.5H8.5M10.5 11.5V13.5M15.5 11.5H15.51M17.5 13H17.51M19.5 10.5C21.1569 11.83 21.1569 14.17 19.5 15.5L16.5 18.5C14.5 19.5 9.5 19.5 7.5 18.5L4.5 15.5C2.84315 14.17 2.84315 11.83 4.5 10.5L7.5 7.5C9.5 6.5 14.5 6.5 16.5 7.5L19.5 10.5Z" />
-                    </svg>
-                    <span class="text-[7px] sm:text-[9px] tracking-widest uppercase font-black ${isFilled ? 'text-white' : 'text-slate-500'}">SELLO ${i}</span>
-                `;
-                container.appendChild(slot);
-            }
+                document.getElementById('user-avatar-container').innerHTML = getGamerAvatarSvg(user.avatar || "helmet");
 
-            const alertContainer = document.getElementById('user-alert-container');
-            if (user.horas_gratis > 0) {
-                alertContainer.innerHTML = `
-                    <div class="bg-gradient-to-r from-emerald-500 to-green-600 text-white p-4 rounded-2xl font-black text-sm max-w-md mx-auto shadow-xl shadow-emerald-500/25 animate-bounce">
-                        🎉 ¡TIENES HORAS GRATIS DE Xbox LISTAS! <br>
-                        <span class="font-medium text-xs text-emerald-100">Preséntate con el personal de caja para jugar de inmediato.</span>
+                const badgeEl = document.getElementById('user-tier-badge');
+                if (user.horas_gratis > 1) {
+                    badgeEl.innerText = "RANK: ELITE SPARTAN";
+                    badgeEl.className = "text-[9px] font-black text-white bg-amber-600/30 border border-amber-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider tech-font";
+                } else if (user.sellos > 2) {
+                    badgeEl.innerText = "RANK: CYBER-SOLDIER";
+                    badgeEl.className = "text-[9px] font-black text-white bg-blue-600/30 border border-blue-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider tech-font";
+                } else {
+                    badgeEl.innerText = "RANK: ROOKIE GAMER";
+                    badgeEl.className = "text-[9px] font-black text-white bg-emerald-600/30 border border-emerald-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-wider tech-font";
+                }
+
+                document.getElementById('user-dash-name').innerText = user.nombre;
+                document.getElementById('user-dash-info').innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-center sm:justify-start gap-1.5 sm:gap-3 text-slate-400 mt-1">
+                        <span class="flex items-center justify-center sm:justify-start gap-1.5 break-all text-xs sm:text-sm">
+                            <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            ${user.correo}
+                        </span>
+                        <span class="hidden sm:inline text-slate-700">|</span>
+                        <span class="flex items-center justify-center sm:justify-start gap-1.5 font-mono text-xs sm:text-sm">
+                            <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                            ${user.telefono}
+                        </span>
                     </div>
                 `;
-            } else {
-                alertContainer.innerHTML = '';
-            }
+
+                document.getElementById('user-dash-rewards').innerText = user.horas_gratis;
+
+                const container = document.getElementById('stamps-container');
+                container.innerHTML = '';
+                
+                for(let i = 1; i <= MAX_STAMPS; i++) {
+                    const isFilled = i <= user.sellos;
+                    const slot = document.createElement('div');
+                    
+                    slot.className = `aspect-square rounded-2xl flex flex-col items-center justify-center border transition-all duration-500 transform p-1 sm:p-2 ${
+                        isFilled 
+                        ? 'bg-gradient-to-br from-emerald-500 via-green-600 to-emerald-800 border-emerald-400 text-white font-black shadow-[0_4px_15px_rgba(16,124,16,0.35)] scale-102 glowing-pulse' 
+                        : 'bg-slate-950 border-slate-800 text-slate-600 shadow-inner'
+                    }`;
+                    
+                    slot.innerHTML = `
+                        <svg class="w-6 h-6 sm:w-10 sm:h-10 mb-0.5 sm:mb-1 transition-transform duration-300 ${isFilled ? 'scale-105' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.5 12.5H12.5M9.5 12.5H8.5M10.5 11.5V13.5M15.5 11.5H15.51M17.5 13H17.51M19.5 10.5C21.1569 11.83 21.1569 14.17 19.5 15.5L16.5 18.5C14.5 19.5 9.5 19.5 7.5 18.5L4.5 15.5C2.84315 14.17 2.84315 11.83 4.5 10.5L7.5 7.5C9.5 6.5 14.5 6.5 16.5 7.5L19.5 10.5Z" />
+                        </svg>
+                        <span class="text-[7px] sm:text-[9px] tracking-widest uppercase font-black ${isFilled ? 'text-white' : 'text-slate-500'}">SELLO ${i}</span>
+                    `;
+                    container.appendChild(slot);
+                }
+
+                const alertContainer = document.getElementById('user-alert-container');
+                if (user.horas_gratis > 0) {
+                    alertContainer.innerHTML = `
+                        <div class="bg-gradient-to-r from-emerald-500 to-green-600 text-white p-4 rounded-2xl font-black text-sm max-w-md mx-auto shadow-xl shadow-emerald-500/25 animate-bounce">
+                            🎉 ¡TIENES HORAS GRATIS DE Xbox LISTAS! <br>
+                            <span class="font-medium text-xs text-emerald-100">Preséntate con el personal de caja para jugar de inmediato.</span>
+                        </div>
+                    `;
+                } else {
+                    alertContainer.innerHTML = '';
+                }
+            });
         }
 
         // ============================================
-        // PANEL DE ADMINISTRACIÓN MEJORADO
+        // PANEL DE ADMINISTRACIÓN (TIEMPO REAL)
         // ============================================
         function liberarConsumo(id) {
             if (!id) {
@@ -966,51 +960,45 @@
                 return;
             }
             
-            let db = getDB();
-            let idx = db.findIndex(u => u.id === id);
-            
-            if(idx === -1) {
-                showToast("Error: Usuario no encontrado", "error");
-                return;
-            }
-            
-            let user = db[idx];
-            
-            if (typeof user.sellos !== 'number' || isNaN(user.sellos)) {
-                user.sellos = 0;
-            }
-            if (typeof user.horas_gratis !== 'number' || isNaN(user.horas_gratis)) {
-                user.horas_gratis = 0;
-            }
-            
-            if (user.sellos >= MAX_STAMPS) {
-                showToast(`⚠️ ${user.nombre} ya tiene ${MAX_STAMPS} sellos, debe canjearlos`, "error");
-                return;
-            }
-            
-            user.sellos += 1;
-            
-            if(user.sellos >= MAX_STAMPS) {
-                user.sellos = 0;
-                user.horas_gratis += 1;
-                
-                if (user.horas_gratis > MAX_REWARD_HOURS) {
-                    user.horas_gratis = MAX_REWARD_HOURS;
-                    showToast(`⚠️ ${user.nombre} alcanzó el límite máximo de ${MAX_REWARD_HOURS} horas`, "warning");
-                } else {
-                    showToast(`🏆 ¡${user.nombre} completó su tarjeta y ganó 1 Hora Gratis!`, 'success');
+            const userRef = database.ref('users/' + id);
+            userRef.once('value', (snapshot) => {
+                const user = snapshot.val();
+                if (!user) {
+                    showToast("Error: Usuario no encontrado", "error");
+                    return;
                 }
-            } else {
-                showToast(`Sello agregado a ${user.nombre} (${user.sellos}/${MAX_STAMPS})`, 'success');
-            }
-            
-            db[idx] = user;
-            saveDB(db);
-            renderAdminTable();
-            
-            if (currentUser && currentUser.id === id) {
-                renderUserDashboard();
-            }
+                
+                let sellos = user.sellos || 0;
+                let horas_gratis = user.horas_gratis || 0;
+                
+                if (sellos >= MAX_STAMPS) {
+                    showToast(`⚠️ ${user.nombre} ya tiene ${MAX_STAMPS} sellos, debe canjearlos`, "error");
+                    return;
+                }
+                
+                sellos += 1;
+                
+                if(sellos >= MAX_STAMPS) {
+                    sellos = 0;
+                    horas_gratis += 1;
+                    
+                    if (horas_gratis > MAX_REWARD_HOURS) {
+                        horas_gratis = MAX_REWARD_HOURS;
+                        showToast(`⚠️ ${user.nombre} alcanzó el límite máximo de ${MAX_REWARD_HOURS} horas`, "warning");
+                    } else {
+                        showToast(`🏆 ¡${user.nombre} completó su tarjeta y ganó 1 Hora Gratis!`, 'success');
+                    }
+                } else {
+                    showToast(`Sello agregado a ${user.nombre} (${sellos}/${MAX_STAMPS})`, 'success');
+                }
+                
+                userRef.update({ sellos: sellos, horas_gratis: horas_gratis }, () => {
+                    renderAdminTable();
+                    if (currentUser && currentUser.id === id) {
+                        renderUserDashboard();
+                    }
+                });
+            });
         }
 
         function cobrarPremio(id) {
@@ -1019,39 +1007,33 @@
                 return;
             }
             
-            let db = getDB();
-            let idx = db.findIndex(u => u.id === id);
-            
-            if(idx === -1) {
-                showToast("Error: Usuario no encontrado", "error");
-                return;
-            }
-            
-            if (typeof db[idx].horas_gratis !== 'number' || isNaN(db[idx].horas_gratis)) {
-                db[idx].horas_gratis = 0;
-                saveDB(db);
-                showToast("Error: Datos de horas corruptos, reiniciados a 0", "error");
-                return;
-            }
-            
-            if(db[idx].horas_gratis <= 0) {
-                showToast("Este usuario no tiene horas disponibles para canjear", "error");
-                return;
-            }
-            
-            showConfirm(
-                "Confirmar Canje", 
-                `¿Deseas canjear 1 hora gratis de juego para el cliente ${db[idx].nombre}? (${db[idx].horas_gratis} horas disponibles)`,
-                () => {
-                    db[idx].horas_gratis -= 1;
-                    saveDB(db);
-                    renderAdminTable();
-                    if (currentUser && currentUser.id === id) {
-                        renderUserDashboard();
-                    }
-                    showToast("🎮 Hora de juego gratuita aplicada con éxito", "success");
+            const userRef = database.ref('users/' + id);
+            userRef.once('value', (snapshot) => {
+                const user = snapshot.val();
+                if (!user) {
+                    showToast("Error: Usuario no encontrado", "error");
+                    return;
                 }
-            );
+                
+                if (!user.horas_gratis || user.horas_gratis <= 0) {
+                    showToast("Este usuario no tiene horas disponibles para canjear", "error");
+                    return;
+                }
+                
+                showConfirm(
+                    "Confirmar Canje", 
+                    `¿Deseas canjear 1 hora gratis de juego para el cliente ${user.nombre}? (${user.horas_gratis} horas disponibles)`,
+                    () => {
+                        userRef.update({ horas_gratis: user.horas_gratis - 1 }, () => {
+                            renderAdminTable();
+                            if (currentUser && currentUser.id === id) {
+                                renderUserDashboard();
+                            }
+                            showToast("🎮 Hora de juego gratuita aplicada con éxito", "success");
+                        });
+                    }
+                );
+            });
         }
 
         function eliminarUsuario(id) {
@@ -1060,41 +1042,36 @@
                 return;
             }
             
-            let db = getDB();
-            const user = db.find(u => u.id === id);
-            
-            if (!user) {
-                showToast("Error: Usuario no encontrado", "error");
-                return;
-            }
-            
-            if (currentUser && currentUser.id === id) {
-                showToast("⚠️ No puedes eliminar tu propia cuenta mientras estás logueado", "error");
-                return;
-            }
-            
-            if (db.length <= 1) {
-                showToast("⚠️ No puedes eliminar el último usuario de la base de datos", "error");
-                return;
-            }
-            
-            showConfirm(
-                "Eliminar Cliente", 
-                `¿Estás seguro de eliminar permanentemente a ${user.nombre}? Se borrarán todos sus sellos de fidelidad.`,
-                () => {
-                    db = db.filter(u => u.id !== id);
-                    saveDB(db);
-                    renderAdminTable();
-                    
-                    if (currentUser && currentUser.id === id) {
-                        currentUser = null;
-                        switchView('view-home');
-                        showToast("Tu cuenta ha sido eliminada", "info");
-                    } else {
-                        showToast(`🗑️ ${user.nombre} removido de la base de datos`, "success");
-                    }
+            const userRef = database.ref('users/' + id);
+            userRef.once('value', (snapshot) => {
+                const user = snapshot.val();
+                if (!user) {
+                    showToast("Error: Usuario no encontrado", "error");
+                    return;
                 }
-            );
+                
+                if (currentUser && currentUser.id === id) {
+                    showToast("⚠️ No puedes eliminar tu propia cuenta mientras estás logueado", "error");
+                    return;
+                }
+                
+                showConfirm(
+                    "Eliminar Cliente", 
+                    `¿Estás seguro de eliminar permanentemente a ${user.nombre}? Se borrarán todos sus sellos de fidelidad.`,
+                    () => {
+                        deleteUser(id, () => {
+                            renderAdminTable();
+                            if (currentUser && currentUser.id === id) {
+                                currentUser = null;
+                                switchView('view-home');
+                                showToast("Tu cuenta ha sido eliminada", "info");
+                            } else {
+                                showToast(`🗑️ ${user.nombre} removido de la base de datos`, "success");
+                            }
+                        });
+                    }
+                );
+            });
         }
 
         function openUserModal(id = null) {
@@ -1105,22 +1082,25 @@
                 document.getElementById('modal-title').innerText = "Modificar Datos de Cliente";
                 document.getElementById('modal-pass-container').classList.add('hidden');
                 
-                const user = getDB().find(u => u.id === id);
-                if (user) {
-                    document.getElementById('modal-user-id').value = user.id;
-                    document.getElementById('modal-name').value = user.nombre;
-                    document.getElementById('modal-email').value = user.correo;
-                    document.getElementById('modal-phone').value = user.telefono;
-                } else {
-                    showToast("Error: Usuario no encontrado", "error");
-                    return;
-                }
+                const userRef = database.ref('users/' + id);
+                userRef.once('value', (snapshot) => {
+                    const user = snapshot.val();
+                    if (user) {
+                        document.getElementById('modal-user-id').value = user.id;
+                        document.getElementById('modal-name').value = user.nombre;
+                        document.getElementById('modal-email').value = user.correo;
+                        document.getElementById('modal-phone').value = user.telefono;
+                        modal.classList.remove('hidden');
+                    } else {
+                        showToast("Error: Usuario no encontrado", "error");
+                    }
+                });
             } else {
                 document.getElementById('modal-title').innerText = "Nuevo Registro de Cliente";
                 document.getElementById('modal-pass-container').classList.remove('hidden');
                 document.getElementById('modal-user-id').value = '';
+                modal.classList.remove('hidden');
             }
-            modal.classList.remove('hidden');
         }
 
         function closeUserModal() {
@@ -1149,42 +1129,24 @@
                 return;
             }
             
-            let db = getDB();
             const normalizedEmail = correo.toLowerCase();
             const sanitizedPhone = sanitizePhone(telefono);
             
-            const exists = db.some(u => {
-                if (id && u.id === id) return false;
-                return u.correo.toLowerCase() === normalizedEmail || u.telefono === sanitizedPhone;
-            });
-            
-            if (exists) {
-                showToast("El correo o teléfono ya están registrados", "error");
-                return;
-            }
-
             if(id) {
-                const userIndex = db.findIndex(u => u.id === id);
-                if (userIndex === -1) {
-                    showToast("Error: Usuario no encontrado", "error");
-                    return;
-                }
-                
-                db[userIndex] = { 
-                    ...db[userIndex], 
-                    nombre: sanitizeText(nombre), 
-                    correo: normalizedEmail, 
-                    telefono: sanitizedPhone 
-                };
-                
-                if (currentUser && currentUser.id === id) {
-                    currentUser = { ...db[userIndex] };
-                    renderUserDashboard();
-                }
-                
-                saveDB(db);
-                renderAdminTable();
-                showToast("✅ Cambios del cliente guardados con éxito", "success");
+                const userRef = database.ref('users/' + id);
+                userRef.update({
+                    nombre: sanitizeText(nombre),
+                    correo: normalizedEmail,
+                    telefono: sanitizedPhone
+                }, () => {
+                    if (currentUser && currentUser.id === id) {
+                        currentUser = { ...currentUser, nombre: sanitizeText(nombre), correo: normalizedEmail, telefono: sanitizedPhone };
+                        renderUserDashboard();
+                    }
+                    renderAdminTable();
+                    showToast("✅ Cambios del cliente guardados con éxito", "success");
+                    closeUserModal();
+                });
             } else {
                 const contrasena = document.getElementById('modal-pass').value || "123";
                 if (contrasena.length < MIN_PASSWORD_LENGTH) {
@@ -1192,174 +1154,180 @@
                     return;
                 }
                 
-                const avatars = ["helmet", "cyborg", "ninja"];
-                const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
-                
-                const newUser = {
-                    id: Date.now().toString(),
-                    nombre: sanitizeText(nombre),
-                    correo: normalizedEmail,
-                    telefono: sanitizedPhone,
-                    contrasena: contrasena,
-                    sellos: 0,
-                    horas_gratis: 0,
-                    avatar: randomAvatar,
-                    fecha_registro: new Date().toISOString()
-                };
-                
-                db.push(newUser);
-                saveDB(db);
-                renderAdminTable();
-                showToast("✅ Nuevo usuario registrado correctamente", "success");
+                const dbRef = database.ref('users');
+                dbRef.orderByChild('correo').equalTo(normalizedEmail).once('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        showToast("El correo ya está registrado", "error");
+                        return;
+                    }
+                    
+                    dbRef.orderByChild('telefono').equalTo(sanitizedPhone).once('value', (phoneSnapshot) => {
+                        if (phoneSnapshot.exists()) {
+                            showToast("El teléfono ya está registrado", "error");
+                            return;
+                        }
+                        
+                        const avatars = ["helmet", "cyborg", "ninja"];
+                        const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+                        
+                        const newUser = {
+                            id: Date.now().toString(),
+                            nombre: sanitizeText(nombre),
+                            correo: normalizedEmail,
+                            telefono: sanitizedPhone,
+                            contrasena: contrasena,
+                            sellos: 0,
+                            horas_gratis: 0,
+                            avatar: randomAvatar,
+                            fecha_registro: new Date().toISOString()
+                        };
+                        
+                        saveUser(newUser, () => {
+                            renderAdminTable();
+                            showToast("✅ Nuevo usuario registrado correctamente", "success");
+                            closeUserModal();
+                        });
+                    });
+                });
             }
-            
-            closeUserModal();
         }
 
         function renderAdminTable() {
-            const db = getDB();
-            
-            if (!Array.isArray(db)) {
-                console.error('Error: DB no es un array', db);
-                showToast("Error: Base de datos corrupta", "error");
-                return;
-            }
-            
-            const searchInput = document.getElementById('admin-search');
-            if (!searchInput) {
-                console.warn('Elemento admin-search no encontrado');
-                return;
-            }
-            
-            const search = searchInput.value.toLowerCase();
-            const tbody = document.getElementById('admin-table-body');
-            const cardsContainer = document.getElementById('admin-cards-container');
-            
-            if (!tbody || !cardsContainer) {
-                console.warn('Elementos de tabla no encontrados');
-                return;
-            }
-            
-            tbody.innerHTML = '';
-            cardsContainer.innerHTML = '';
-
-            const filtered = db.filter(u => 
-                u.correo.toLowerCase().includes(search) || 
-                u.telefono.includes(search) || 
-                u.nombre.toLowerCase().includes(search)
-            );
-
-            if(filtered.length === 0) {
-                const noResultMarkup = `<div class="p-8 text-center text-slate-400 font-medium">No se encontraron clientes para esta búsqueda.</div>`;
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium bg-slate-900/10">No se encontraron clientes.</td></tr>`;
-                cardsContainer.innerHTML = noResultMarkup;
-                return;
-            }
-
-            filtered.forEach(user => {
-                const progressPct = (user.sellos / MAX_STAMPS) * 100;
+            const dbRef = database.ref('users');
+            dbRef.off();
+            dbRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                const db = data ? Object.values(data) : [];
                 
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-850/40 transition-all border-b border-slate-850";
-                tr.innerHTML = `
-                    <td class="p-4 pl-6 font-bold text-white text-sm">
-                        <div class="flex items-center gap-3">
-                            ${getGamerAvatarSvg(user.avatar || "helmet")}
-                            <span>${user.nombre}</span>
-                        </div>
-                    </td>
-                    <td class="p-4 text-slate-400 text-xs">
-                        <div class="font-medium text-slate-200">${user.correo}</div>
-                        <div class="font-mono text-slate-400">${user.telefono}</div>
-                    </td>
-                    <td class="p-4 text-center">
-                        <div class="flex items-center gap-2 justify-center">
-                            <span class="bg-slate-950 px-2.5 py-1 rounded-lg font-mono text-emerald-400 font-extrabold text-xs">
-                                ${user.sellos}/${MAX_STAMPS}
-                            </span>
-                            <div class="w-16 h-2 bg-slate-950 rounded-full overflow-hidden hidden sm:block">
-                                <div class="h-full bg-emerald-500 transition-all duration-300" style="width: ${Math.min(progressPct, 100)}%"></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="p-4 text-center">
-                        <span class="px-2.5 py-1.5 rounded-lg font-extrabold text-xs ${user.horas_gratis > 0 ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40' : 'bg-slate-950 text-slate-600 border border-slate-850'}">
-                            🎁 ${user.horas_gratis} Horas
-                        </span>
-                    </td>
-                    <td class="p-4 pr-6 text-right space-x-1 whitespace-nowrap">
-                        <button onclick="liberarConsumo('${user.id}')" class="bg-[#107C10] hover:brightness-110 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer shadow-md active:scale-95">
-                            +1 Sello
-                        </button>
-                        ${user.horas_gratis > 0 ? `
-                            <button onclick="cobrarPremio('${user.id}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95">
-                                Canjear
-                            </button>
-                        ` : ''}
-                        <button onclick="openUserModal('${user.id}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-semibold px-2.5 py-2 rounded-xl transition-all cursor-pointer">
-                            Editar
-                        </button>
-                        <button onclick="eliminarUsuario('${user.id}')" class="text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 text-xs px-2.5 py-2 rounded-xl transition-all cursor-pointer border border-rose-500/20">
-                            Eliminar
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+                const searchInput = document.getElementById('admin-search');
+                if (!searchInput) return;
+                
+                const search = searchInput.value.toLowerCase();
+                const tbody = document.getElementById('admin-table-body');
+                const cardsContainer = document.getElementById('admin-cards-container');
+                
+                if (!tbody || !cardsContainer) return;
+                
+                tbody.innerHTML = '';
+                cardsContainer.innerHTML = '';
 
-                const card = document.createElement('div');
-                card.className = "pt-4 first:pt-0 pb-2 space-y-3";
-                card.innerHTML = `
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3">
-                            ${getGamerAvatarSvg(user.avatar || "helmet")}
-                            <div>
-                                <h4 class="font-bold text-white text-sm leading-tight">${user.nombre}</h4>
-                                <span class="text-[9px] font-black text-emerald-400 tracking-wider font-mono uppercase bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 inline-block mt-1">
-                                    ${user.sellos}/${MAX_STAMPS} SELLOS
+                const filtered = db.filter(u => 
+                    u.correo.toLowerCase().includes(search) || 
+                    u.telefono.includes(search) || 
+                    u.nombre.toLowerCase().includes(search)
+                );
+
+                if(filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium bg-slate-900/10">No se encontraron clientes.</td></tr>`;
+                    cardsContainer.innerHTML = `<div class="p-8 text-center text-slate-400 font-medium">No se encontraron clientes para esta búsqueda.</div>`;
+                    return;
+                }
+
+                filtered.forEach(user => {
+                    const progressPct = (user.sellos / MAX_STAMPS) * 100;
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-850/40 transition-all border-b border-slate-850";
+                    tr.innerHTML = `
+                        <td class="p-4 pl-6 font-bold text-white text-sm">
+                            <div class="flex items-center gap-3">
+                                ${getGamerAvatarSvg(user.avatar || "helmet")}
+                                <span>${user.nombre}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-slate-400 text-xs">
+                            <div class="font-medium text-slate-200">${user.correo}</div>
+                            <div class="font-mono text-slate-400">${user.telefono}</div>
+                        </td>
+                        <td class="p-4 text-center">
+                            <div class="flex items-center gap-2 justify-center">
+                                <span class="bg-slate-950 px-2.5 py-1 rounded-lg font-mono text-emerald-400 font-extrabold text-xs">
+                                    ${user.sellos}/${MAX_STAMPS}
+                                </span>
+                                <div class="w-16 h-2 bg-slate-950 rounded-full overflow-hidden hidden sm:block">
+                                    <div class="h-full bg-emerald-500 transition-all duration-300" style="width: ${Math.min(progressPct, 100)}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="px-2.5 py-1.5 rounded-lg font-extrabold text-xs ${user.horas_gratis > 0 ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40' : 'bg-slate-950 text-slate-600 border border-slate-850'}">
+                                🎁 ${user.horas_gratis} Horas
+                            </span>
+                        </td>
+                        <td class="p-4 pr-6 text-right space-x-1 whitespace-nowrap">
+                            <button onclick="liberarConsumo('${user.id}')" class="bg-[#107C10] hover:brightness-110 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer shadow-md active:scale-95">
+                                +1 Sello
+                            </button>
+                            ${user.horas_gratis > 0 ? `
+                                <button onclick="cobrarPremio('${user.id}')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95">
+                                    Canjear
+                                </button>
+                            ` : ''}
+                            <button onclick="openUserModal('${user.id}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-semibold px-2.5 py-2 rounded-xl transition-all cursor-pointer">
+                                Editar
+                            </button>
+                            <button onclick="eliminarUsuario('${user.id}')" class="text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 text-xs px-2.5 py-2 rounded-xl transition-all cursor-pointer border border-rose-500/20">
+                                Eliminar
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    const card = document.createElement('div');
+                    card.className = "pt-4 first:pt-0 pb-2 space-y-3";
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                ${getGamerAvatarSvg(user.avatar || "helmet")}
+                                <div>
+                                    <h4 class="font-bold text-white text-sm leading-tight">${user.nombre}</h4>
+                                    <span class="text-[9px] font-black text-emerald-400 tracking-wider font-mono uppercase bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 inline-block mt-1">
+                                        ${user.sellos}/${MAX_STAMPS} SELLOS
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-[8px] text-slate-500 font-bold uppercase tracking-wider">Premio Listo</span>
+                                <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 mt-0.5">
+                                    🎁 ${user.horas_gratis} Hrs
                                 </span>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="block text-[8px] text-slate-500 font-bold uppercase tracking-wider">Premio Listo</span>
-                            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-2 py-0.5 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 mt-0.5">
-                                🎁 ${user.horas_gratis} Hrs
-                            </span>
-                        </div>
-                    </div>
 
-                    <div class="text-[11px] text-slate-400 space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-850">
-                        <div class="flex items-center gap-1.5 break-all">
-                            <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            ${user.correo}
+                        <div class="text-[11px] text-slate-400 space-y-1 bg-slate-950/40 p-2.5 rounded-xl border border-slate-850">
+                            <div class="flex items-center gap-1.5 break-all">
+                                <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                ${user.correo}
+                            </div>
+                            <div class="flex items-center gap-1.5 font-mono">
+                                <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                ${user.telefono}
+                            </div>
                         </div>
-                        <div class="flex items-center gap-1.5 font-mono">
-                            <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                            ${user.telefono}
+
+                        <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 transition-all duration-300" style="width: ${Math.min(progressPct, 100)}%"></div>
                         </div>
-                    </div>
 
-                    <div class="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                        <div class="h-full bg-emerald-500 transition-all duration-300" style="width: ${Math.min(progressPct, 100)}%"></div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-1.5 pt-1">
-                        <button onclick="liberarConsumo('${user.id}')" class="flex-1 bg-[#107C10] hover:brightness-110 text-white text-[10px] font-black uppercase tracking-wider py-2 px-3 rounded-lg transition-all active:scale-95 shadow-md">
-                            +1 Sello
-                        </button>
-                        ${user.horas_gratis > 0 ? `
-                            <button onclick="cobrarPremio('${user.id}')" class="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider py-2 px-3 rounded-lg transition-all active:scale-95">
-                                Canjear
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <button onclick="liberarConsumo('${user.id}')" class="flex-1 bg-[#107C10] hover:brightness-110 text-white text-[10px] font-black uppercase tracking-wider py-2 px-3 rounded-lg transition-all active:scale-95 shadow-md">
+                                +1 Sello
                             </button>
-                        ` : ''}
-                        <button onclick="openUserModal('${user.id}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 text-[10px] font-bold py-2 px-3 rounded-lg transition-all">
-                            Editar
-                        </button>
-                        <button onclick="eliminarUsuario('${user.id}')" class="text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 text-[10px] font-bold py-2 px-2.5 rounded-lg transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                    </div>
-                `;
-                cardsContainer.appendChild(card);
+                            ${user.horas_gratis > 0 ? `
+                                <button onclick="cobrarPremio('${user.id}')" class="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider py-2 px-3 rounded-lg transition-all active:scale-95">
+                                    Canjear
+                                </button>
+                            ` : ''}
+                            <button onclick="openUserModal('${user.id}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 text-[10px] font-bold py-2 px-3 rounded-lg transition-all">
+                                Editar
+                            </button>
+                            <button onclick="eliminarUsuario('${user.id}')" class="text-rose-400 hover:text-white bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 text-[10px] font-bold py-2 px-2.5 rounded-lg transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                        </div>
+                    `;
+                    cardsContainer.appendChild(card);
+                });
             });
         }
 
@@ -1367,22 +1335,19 @@
         // INICIALIZACIÓN
         // ============================================
         (function init() {
-            console.log('🎮 Xbox Lounge Loyalty System v2.0');
+            console.log('🎮 Xbox Lounge Loyalty System v2.0 - Firebase');
             console.log('📦 Inicializando...');
             
-            getDB();
+            initializeDatabase();
             
             console.log('✅ Sistema listo!');
             console.log('💡 Para debug:');
-            console.log('  - getDB() - Ver todos los usuarios');
+            console.log('  - database.ref("users").once("value") - Ver todos los usuarios');
             console.log('  - resetDatabase() - Reiniciar DB');
-            console.log('  - SEED_USERS - Ver usuarios semilla');
         })();
 
-        // Exponer funciones de debug en consola
         window.debug = {
-            getDB: getDB,
-            saveDB: saveDB,
+            database: database,
             resetDatabase: resetDatabase,
             SEED_USERS: SEED_USERS
         };
