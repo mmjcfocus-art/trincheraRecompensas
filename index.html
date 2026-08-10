@@ -8,7 +8,7 @@
     <!-- Firebase (versión compatibilidad para HTML simple) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -332,6 +332,7 @@
         // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
 
         // ============================================
         // CONSTANTES Y CONFIGURACIÓN
@@ -513,32 +514,269 @@
         // ============================================
         // LOGIN USUARIO / REGISTRO CON FIREBASE
         // ============================================
-        function handleUserLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-user-email').value.trim();
-            const pass = document.getElementById('login-user-pass').value;
-            if (!email || !pass) { showToast("Por favor completa todos los campos", "error"); return; }
-            if (!validateEmail(email)) { showToast("Correo electrónico inválido", "error"); return; }
+        // ============================================
+// LOGIN USUARIO / MIGRACIÓN A FIREBASE AUTH
+// ============================================
+async function handleUserLogin(e) {
+    e.preventDefault();
+
+    const email = document.getElementById('login-user-email').value.trim().toLowerCase();
+    const pass = document.getElementById('login-user-pass').value;
+
+    if (!email || !pass) {
+        showToast("Por favor completa todos los campos", "error");
+        return;
+    }
+
+    if (!validateEmail(email)) {
+        showToast("Correo electrónico inválido", "error");
+        return;
+    }
+
+    try {
+        // ============================================
+        // 1. INTENTAR LOGIN NORMAL CON FIREBASE AUTH
+        // ============================================
+        let credential;
+
+        try {
+            credential = await auth.signInWithEmailAndPassword(email, pass);
+        } catch (authError) {
+
+            // ============================================
+            // 2. SI TODAVÍA NO EXISTE EN AUTH,
+            //    BUSCAR AL USUARIO ANTIGUO
+            // ============================================
+            if (
+                authError.code !== 'auth/user-not-found' &&
+                authError.code !== 'auth/invalid-credential' &&
+                authError.code !== 'auth/invalid-login-credentials'
+            ) {
+                throw authError;
+            }
+
             const dbRef = database.ref('users');
-            dbRef.orderByChild('correo').equalTo(email).once('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    const users = Object.values(data);
-                    const user = users.find(u => u.contrasena === pass);
-                    if (user && isValidUser(user)) {
-                        currentUser = { ...user };
-                        renderUserDashboard();
-                        switchView('view-user-dashboard');
-                        showToast(`¡Hola de nuevo, ${user.nombre}!`);
-                        e.target.reset();
-                    } else {
-                        showToast("Correo o contraseña incorrectos", "error");
-                    }
+
+            const snapshot = await dbRef
+                .orderByChild('correo')
+                .equalTo(email)
+                .once('value');
+
+            const data = snapshot.val();
+
+            if (!data) {
+                showToast("Correo o contraseña incorrectos", "error");
+                return;
+            }
+
+            const users = Object.entries(data);
+
+            const legacyEntry = users.find(([key, user]) =>
+                user &&
+                user.contrasena === pass &&
+                isValidUser(user)
+            );
+
+            if (!legacyEntry) {
+                showToast("Correo o contraseña incorrectos", "error");
+                return;
+            }
+
+            const [legacyId, legacyUser] = legacyEntry;
+
+            // ============================================
+            // 3. CREAR CUENTA EN FIREBASE AUTH
+            //    UTILIZANDO LA CONTRASEÑA ACTUAL
+            // ============================================
+            try {
+                credential = await auth.createUserWithEmailAndPassword(
+                    email,
+                    pass
+                );
+            } catch (createError) {
+
+                // Si la cuenta ya existe en Authentication,
+                // intentamos iniciar sesión nuevamente.
+                if (createError.code === 'auth/email-already-in-use') {
+                    credential = await auth.signInWithEmailAndPassword(
+                        email,
+                        pass
+                    );
                 } else {
-                    showToast("Correo o contraseña incorrectos", "error");
+                    throw createError;
                 }
-            });
+            }
+
+            const uid = credential.user.uid;
+
+            // ============================================
+            // 4. COPIAR LOS DATOS DEL USUARIO ANTIGUO
+            //    AL NUEVO UID DE FIREBASE
+            // ============================================
+            const migratedUser = {
+                ...legacyUser,
+
+                // El nuevo identificador será el UID
+                id: uid,
+
+                // Guardamos el UID explícitamente
+                uid: uid,
+
+                // Normalizamos el correo
+                correo: email,
+
+                // Marcamos que ya fue migrado
+                auth_migrated: true,
+
+                // Fecha de migración
+                fecha_migracion: new Date().toISOString()
+            };
+
+            await database.ref('users/' + uid).set(migratedUser);
+
+            // ============================================
+            // 5. NO BORRAMOS TODAVÍA EL USUARIO ANTIGUO
+            // ============================================
+            // Esto es intencional.
+            //
+            // Primero verificaremos que todo funciona.
+            // Después eliminaremos los registros antiguos
+            // y quitaremos "contrasena" de la base de datos.
+
+            console.log(
+                `Usuario migrado correctamente: ${legacyId} → ${uid}`
+            );
         }
+
+        // ============================================
+        // 6. OBTENER EL UID AUTENTICADO
+        // ============================================
+        const uid = credential.user.uid;
+
+        // ============================================
+        // 7. LEER LOS DATOS DEL USUARIO DESDE SU UID
+        // ============================================
+        const userSnapshot = await database
+            .ref('users/' + uid)
+            .once('value');
+
+        let user = userSnapshot.val();
+
+        // ============================================
+        // 8. COMPATIBILIDAD TEMPORAL
+        // ============================================
+        // Si la cuenta de Authentication existe pero
+        // todavía no tiene datos asociados, buscamos
+        // el usuario antiguo por correo.
+        if (!user) {
+
+            const legacySnapshot = await database
+                .ref('users')
+                .orderByChild('correo')
+                .equalTo(email)
+                .once('value');
+
+            const legacyData = legacySnapshot.val();
+
+            if (legacyData) {
+
+                const legacyEntry = Object.entries(legacyData).find(
+                    ([key, value]) => value && isValidUser(value)
+                );
+
+                if (legacyEntry) {
+
+                    const [, legacyUser] = legacyEntry;
+
+                    user = {
+                        ...legacyUser,
+                        id: uid,
+                        uid: uid,
+                        correo: email,
+                        auth_migrated: true,
+                        fecha_migracion: new Date().toISOString()
+                    };
+
+                    await database
+                        .ref('users/' + uid)
+                        .set(user);
+                }
+            }
+        }
+
+        // ============================================
+        // 9. VALIDAR USUARIO
+        // ============================================
+        if (!user || !isValidUser(user)) {
+
+            await auth.signOut();
+
+            showToast(
+                "No se encontraron los datos de tu cuenta",
+                "error"
+            );
+
+            return;
+        }
+
+        // ============================================
+        // 10. GUARDAR SESIÓN ACTUAL
+        // ============================================
+        currentUser = {
+            ...user,
+            id: uid,
+            uid: uid
+        };
+
+        // ============================================
+        // 11. ENTRAR AL DASHBOARD
+        // ============================================
+        renderUserDashboard();
+        switchView('view-user-dashboard');
+
+        showToast(
+            `¡Hola de nuevo, ${user.nombre}!`
+        );
+
+        e.target.reset();
+
+    } catch (error) {
+
+        console.error("Error durante el inicio de sesión:", error);
+
+        let message = "No fue posible iniciar sesión";
+
+        switch (error.code) {
+
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+            case 'auth/invalid-login-credentials':
+                message = "Correo o contraseña incorrectos";
+                break;
+
+            case 'auth/user-disabled':
+                message = "Esta cuenta está deshabilitada";
+                break;
+
+            case 'auth/too-many-requests':
+                message = "Demasiados intentos. Intenta nuevamente más tarde";
+                break;
+
+            case 'auth/network-request-failed':
+                message = "Error de conexión con Firebase";
+                break;
+
+            case 'auth/weak-password':
+                message = "La contraseña no cumple los requisitos de seguridad";
+                break;
+
+            default:
+                console.error(error);
+        }
+
+        showToast(message, "error");
+    }
+}
 
         function handleUserRegister(e) {
             e.preventDefault();
