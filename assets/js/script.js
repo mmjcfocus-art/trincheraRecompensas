@@ -499,19 +499,43 @@ async function handleUserLogin(e) {
             });
         }
 
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('admin-email').value.trim();
-            const pass = document.getElementById('admin-pass').value;
-            if (email === 'admin@xbox.com' && pass === 'admin123') {
+    async function handleAdminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('admin-email').value.trim();
+    const pass = document.getElementById('admin-pass').value;
+
+    // Solo permitir el correo de admin
+    if (email !== 'admin@xbox.com') {
+        showToast("❌ Credenciales de administrador inválidas", "error");
+        return;
+    }
+
+    try {
+        // Intentar iniciar sesión con Firebase Auth
+        await auth.signInWithEmailAndPassword(email, pass);
+        // Si funciona, entrar al dashboard
+        switchView('view-admin-dashboard');
+        showToast("🔐 Acceso de Administrador concedido", "success");
+        e.target.reset();
+        renderAdminTable();
+    } catch (error) {
+        // Si el usuario no existe en Auth, créalo automáticamente
+        if (error.code === 'auth/user-not-found') {
+            try {
+                await auth.createUserWithEmailAndPassword(email, pass);
+                // Después de crearlo, ya queda autenticado
                 switchView('view-admin-dashboard');
-                showToast("🔐 Acceso de Administrador concedido", "success");
+                showToast("🛡️ Cuenta Admin creada y acceso concedido", "success");
                 e.target.reset();
                 renderAdminTable();
-            } else {
-                showToast("❌ Llave de acceso inválida", "error");
+            } catch (createError) {
+                showToast("Error creando admin: " + createError.message, "error");
             }
+        } else {
+            showToast("Error: " + error.message, "error");
         }
+    }
+}
 
         // ============================================
         // DASHBOARD USUARIO (TIEMPO REAL)
