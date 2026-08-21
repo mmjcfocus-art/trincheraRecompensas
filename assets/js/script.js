@@ -1,33 +1,14 @@
-// ============================================
-        // 🔥 CONFIGURACIÓN DE FIREBASE (CON TUS DATOS)
-        // ============================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCmTUQa8MSDQPJ3Uz8PH1BKgOB3oM-WaX0",
-            authDomain: "latrincheraloyalty.firebaseapp.com",
-            databaseURL: "https://latrincheraloyalty-default-rtdb.firebaseio.com",
-            projectId: "latrincheraloyalty",
-            storageBucket: "latrincheraloyalty.firebasestorage.app",
-            messagingSenderId: "387143959227",
-            appId: "1:387143959227:web:5a6444e019c7b6fcbb9f9e"
-        };
 
-        // Inicializar Firebase
+        // ============================================
+        // IMPORTAR CONFIGURACIÓN
+        // ============================================
+        import { firebaseConfig, MAX_STAMPS, MAX_REWARD_HOURS, MIN_PASSWORD_LENGTH, SEED_USERS } from './config.js';
+        // ============================================
+        // INICIALIZAR FIREBASE
+        // ============================================
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
-
-        // ============================================
-        // CONSTANTES Y CONFIGURACIÓN
-        // ============================================
-        const MAX_STAMPS = 5;
-        const MAX_REWARD_HOURS = 10;
-        const MIN_PASSWORD_LENGTH = 3;
-
-        const SEED_USERS = [
-            { id: "1", nombre: "Joan", correo: "joan@gmail.com", telefono: "7351813882", contrasena: "123", sellos: 3, horas_gratis: 0, avatar: "helmet" },
-            { id: "2", nombre: "Marcus Fenix", correo: "marcus@gears.com", telefono: "555-0101", contrasena: "123", sellos: 4, horas_gratis: 1, avatar: "cyborg" },
-            { id: "3", nombre: "Master Chief", correo: "john117@unsc.gov", telefono: "555-1170", contrasena: "123", sellos: 0, horas_gratis: 2, avatar: "ninja" }
-        ];
 
         let currentUser = null;
 
@@ -837,6 +818,28 @@ async function handleUserLogin(e) {
             console.log('✅ Sistema listo!');
         })();
 
+
+
+        // ============================================
+        // EXPONER FUNCIONES AL ÁMBITO GLOBAL (WINDOW)
+        // ============================================
+        window.switchView = switchView;
+        window.logout = logout;
+        window.toggleAuthTabs = toggleAuthTabs;
+        window.quickFillUser = quickFillUser;
+        window.handleUserLogin = handleUserLogin;
+        window.handleUserRegister = handleUserRegister;
+        window.handleAdminLogin = handleAdminLogin;
+        window.liberarConsumo = liberarConsumo;
+        window.cobrarPremio = cobrarPremio;
+        window.eliminarUsuario = eliminarUsuario;
+        window.openUserModal = openUserModal;
+        window.closeUserModal = closeUserModal;
+        window.handleModalSubmit = handleModalSubmit;
+        window.resetDatabase = resetDatabase;
+        window.renderAdminTable = renderAdminTable;
+
+        
         window.debug = {
             database: database,
             resetDatabase: resetDatabase,
