@@ -14,10 +14,10 @@ export const firebaseConfig = {
 
 export const MAX_STAMPS = 5;
 export const MAX_REWARD_HOURS = 10;
-export const MIN_PASSWORD_LENGTH = 3;
+export const MIN_PASSWORD_LENGTH = 6;
 
 export const SEED_USERS = [
-    { id: "1", nombre: "Joan", correo: "joan@gmail.com", telefono: "7351813882", contrasena: "123", sellos: 3, horas_gratis: 0, avatar: "helmet" },
-    { id: "2", nombre: "Marcus Fenix", correo: "marcus@gears.com", telefono: "555-0101", contrasena: "123", sellos: 4, horas_gratis: 1, avatar: "cyborg" },
-    { id: "3", nombre: "Master Chief", correo: "john117@unsc.gov", telefono: "555-1170", contrasena: "123", sellos: 0, horas_gratis: 2, avatar: "ninja" }
+    { id: "1", nombre: "Joan", correo: "joan@gmail.com", telefono: "7351813882", contrasena: "123456", sellos: 3, horas_gratis: 0, avatar: "helmet" },
+    { id: "2", nombre: "Marcus Fenix", correo: "marcus@gears.com", telefono: "555-0101", contrasena: "123456", sellos: 4, horas_gratis: 1, avatar: "cyborg" },
+    { id: "3", nombre: "Master Chief", correo: "john117@unsc.gov", telefono: "555-1170", contrasena: "123456", sellos: 0, horas_gratis: 2, avatar: "ninja" }
 ];

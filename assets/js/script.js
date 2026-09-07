@@ -441,44 +441,120 @@ async function handleUserLogin(e) {
     }
 }
 
-        function handleUserRegister(e) {
-            e.preventDefault();
-            const nombre = document.getElementById('reg-name').value.trim();
-            const correo = document.getElementById('reg-email').value.trim();
-            const telefono = document.getElementById('reg-phone').value.trim();
-            const contrasena = document.getElementById('reg-pass').value;
-            if (!nombre || nombre.length < 2) { showToast("El nombre debe tener al menos 2 caracteres", "error"); return; }
-            if (!validateEmail(correo)) { showToast("Correo electrónico inválido", "error"); return; }
-            if (!validatePhone(telefono)) { showToast("Teléfono inválido (debe tener 10 dígitos)", "error"); return; }
-            if (!contrasena || contrasena.length < MIN_PASSWORD_LENGTH) { showToast(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`, "error"); return; }
-            const normalizedEmail = correo.toLowerCase();
-            const sanitizedPhone = sanitizePhone(telefono);
-            const dbRef = database.ref('users');
-            dbRef.orderByChild('correo').equalTo(normalizedEmail).once('value', (snapshot) => {
-                if (snapshot.exists()) { showToast("Este correo ya está registrado en el sistema", "error"); return; }
-                dbRef.orderByChild('telefono').equalTo(sanitizedPhone).once('value', (phoneSnapshot) => {
-                    if (phoneSnapshot.exists()) { showToast("Este teléfono ya está registrado", "error"); return; }
-                    const avatars = ["helmet", "cyborg", "ninja"];
-                    const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
-                    const newUser = {
-                        id: Date.now().toString(),
-                        nombre: sanitizeText(nombre),
-                        correo: normalizedEmail,
-                        telefono: sanitizedPhone,
-                        contrasena: contrasena,
-                        sellos: 0,
-                        horas_gratis: 0,
-                        avatar: randomAvatar,
-                        fecha_registro: new Date().toISOString()
-                    };
-                    saveUser(newUser, () => {
-                        showToast("✅ Registro exitoso. ¡Inicia sesión para ver tu tarjeta!");
-                        toggleAuthTabs('login');
-                        e.target.reset();
-                    });
-                });
-            });
+// Variable global para evitar envíos duplicados
+let isRegistering = false;
+
+async function handleUserRegister(e) {
+    e.preventDefault();
+
+    // Evitar envíos múltiples
+    if (isRegistering) {
+        showToast("Ya se está procesando tu registro, espera un momento...", "info");
+        return;
+    }
+
+    const nombre = document.getElementById('reg-name').value.trim();
+    const correo = document.getElementById('reg-email').value.trim();
+    const telefono = document.getElementById('reg-phone').value.trim();
+    const contrasena = document.getElementById('reg-pass').value;
+
+    // Validaciones
+    if (!nombre || nombre.length < 2) {
+        showToast("El nombre debe tener al menos 2 caracteres", "error");
+        return;
+    }
+    if (!validateEmail(correo)) {
+        showToast("Correo electrónico inválido", "error");
+        return;
+    }
+    if (!validatePhone(telefono)) {
+        showToast("Teléfono inválido (debe tener 10 dígitos)", "error");
+        return;
+    }
+    if (!contrasena || contrasena.length < MIN_PASSWORD_LENGTH) {
+        showToast(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`, "error");
+        return;
+    }
+
+    const normalizedEmail = correo.toLowerCase();
+    const sanitizedPhone = sanitizePhone(telefono);
+    const dbRef = database.ref('users');
+
+    // Bloquear el botón
+    isRegistering = true;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerText;
+    submitBtn.innerText = "Registrando...";
+    submitBtn.disabled = true;
+
+    try {
+        // 1. Verificar si el correo ya existe en la base de datos
+        const emailSnapshot = await dbRef.orderByChild('correo').equalTo(normalizedEmail).once('value');
+        if (emailSnapshot.exists()) {
+            showToast("Este correo ya está registrado en el sistema", "error");
+            isRegistering = false;
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+            return;
         }
+
+        // 2. Verificar si el teléfono ya existe
+        const phoneSnapshot = await dbRef.orderByChild('telefono').equalTo(sanitizedPhone).once('value');
+        if (phoneSnapshot.exists()) {
+            showToast("Este teléfono ya está registrado", "error");
+            isRegistering = false;
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
+
+        // 3. Crear la cuenta en Firebase Authentication
+        const credential = await auth.createUserWithEmailAndPassword(normalizedEmail, contrasena);
+        const uid = credential.user.uid;
+
+        // 4. Guardar los datos del usuario en Realtime Database usando el UID como clave
+        const avatars = ["helmet", "cyborg", "ninja"];
+        const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+        const newUser = {
+            id: uid,
+            uid: uid,
+            nombre: sanitizeText(nombre),
+            correo: normalizedEmail,
+            telefono: sanitizedPhone,
+            contrasena: contrasena,
+            sellos: 0,
+            horas_gratis: 0,
+            avatar: randomAvatar,
+            fecha_registro: new Date().toISOString(),
+            auth_migrated: true
+        };
+
+        // Usamos set() con un "check" adicional para evitar duplicados en el caso de concurrencia
+        const userRef = database.ref('users/' + uid);
+        await userRef.set(newUser);
+
+        // 5. Éxito
+        showToast("✅ Registro exitoso. ¡Inicia sesión para ver tu tarjeta!", "success");
+        toggleAuthTabs('login');
+        e.target.reset();
+
+    } catch (error) {
+        console.error("Error en registro:", error);
+        let message = "No fue posible registrar el usuario";
+        if (error.code === 'auth/email-already-in-use') {
+            message = "Este correo ya está registrado en Firebase Auth";
+        } else if (error.code === 'auth/weak-password') {
+            message = "La contraseña es demasiado débil. Debe tener al menos 6 caracteres.";
+        }
+        showToast(message, "error");
+    } finally {
+        // Restaurar el botón siempre, incluso si hay error
+        isRegistering = false;
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
 
     async function handleAdminLogin(e) {
     e.preventDefault();
