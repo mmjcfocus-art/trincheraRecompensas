@@ -179,11 +179,37 @@ async function handleUserLogin(e) {
         const userSnapshot = await database.ref('users/' + uid).once('value');
         let user = userSnapshot.val();
 
-        // 3. Si no tiene datos en la DB (caso raro), cerrar sesión
+        // 3. Si no tiene datos en la DB, crear un perfil básico automáticamente
         if (!user || !isValidUser(user)) {
-            await auth.signOut();
-            showToast("No se encontraron los datos de tu cuenta", "error");
-            return;
+            console.log('⚠️ Usuario sin datos en DB. Creando perfil automáticamente...');
+
+            // Extraer nombre del correo o usar uno genérico
+            const defaultName = email.split('@')[0];
+            const avatars = ["helmet", "cyborg", "ninja"];
+            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+
+            const newProfile = {
+                id: uid,
+                uid: uid,
+                nombre: defaultName,
+                correo: email,
+                telefono: "0000000000",
+                sellos: 0,
+                horas_gratis: 0,
+                avatar: randomAvatar,
+                fecha_registro: new Date().toISOString()
+            };
+
+            try {
+                await database.ref('users/' + uid).set(newProfile);
+                user = newProfile;
+                showToast("¡Bienvenido! Hemos creado tu tarjeta de fidelidad", "info");
+            } catch (err) {
+                console.error("Error creando perfil automático:", err);
+                await auth.signOut();
+                showToast("Error al crear tu perfil. Contacta al administrador.", "error");
+                return;
+            }
         }
 
         // 4. Guardar sesión actual
