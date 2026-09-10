@@ -902,11 +902,8 @@ window.closeUserModal = closeUserModal;
 window.handleModalSubmit = handleModalSubmit;
 window.resetDatabase = resetDatabase;
 window.renderAdminTable = renderAdminTable;
-
 window.showToast = showToast;
 window.showConfirm = showConfirm;
-window.toggleAuthTabs = toggleAuthTabs;
-window.quickFillUser = quickFillUser;
 window.getGamerAvatarSvg = getGamerAvatarSvg;
 
 
