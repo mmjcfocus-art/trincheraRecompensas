@@ -342,12 +342,19 @@ async function handleUserRegister(e) {
 
         await database.ref('users/' + uid).set(newUser);
 
-        // ============================================
-        // PASO 4: Éxito
-        // ============================================
-        showToast("✅ Registro exitoso. ¡Inicia sesión para ver tu tarjeta!", "success");
-        toggleAuthTabs('login');
-        e.target.reset();
+       // ============================================
+// 5. ÉXITO: Cerrar sesión de Auth para que no redirija
+// ============================================
+// createUserWithEmailAndPassword inicia sesión automáticamente,
+// así que cerramos la sesión para que el usuario tenga que loguearse manualmente.
+await auth.signOut();
+
+showToast("✅ Registro exitoso. ¡Ahora inicia sesión para ver tu tarjeta!", "success");
+toggleAuthTabs('login');
+e.target.reset();
+
+// Asegurarse de que la vista de login siga visible
+switchView('view-user-login');
 
     } catch (error) {
         console.error("Error en registro:", error);
@@ -760,10 +767,14 @@ function renderAdminTable() {
                     updateNavButtons();
                     switchView('view-user-dashboard');
                 } else {
-                    currentUser = null;
-                    await auth.signOut();
-                    switchView('view-home');
-                }
+    currentUser = null;
+    updateNavButtons();
+
+    // Si estamos en proceso de registro, NO cambiar de vista
+    if (!isRegistering) {
+        switchView('view-home');
+    }
+}
             } catch (error) {
                 console.error('❌ Error al restaurar sesión:', error);
                 currentUser = null;
