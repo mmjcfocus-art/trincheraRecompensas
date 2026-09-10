@@ -118,19 +118,46 @@
         // ============================================
         // NAVEGACIÓN
         // ============================================
-        function switchView(viewId) {
-            const views = ['view-home', 'view-user-login', 'view-admin-login', 'view-user-dashboard', 'view-admin-dashboard'];
-            views.forEach(v => document.getElementById(v).classList.add('hidden'));
-            document.getElementById(viewId).classList.remove('hidden');
-            if (viewId === 'view-user-dashboard' || viewId === 'view-admin-dashboard') {
-                document.getElementById('btn-logout').classList.remove('hidden');
-            } else {
-                document.getElementById('btn-logout').classList.add('hidden');
-            }
-            if (viewId === 'view-admin-dashboard') renderAdminTable();
-            if (viewId === 'view-user-dashboard' && currentUser) renderUserDashboard();
-        }
+function switchView(viewId) {
+    console.log("switchView llamada con viewId:", viewId);
+    console.log("currentUser:", currentUser);
 
+    // 1. Si el usuario está autenticado y quiere ir a vistas públicas, redirigir al dashboard
+    if (currentUser && (viewId === 'view-home' || viewId === 'view-user-login' || viewId === 'view-admin-login')) {
+        console.log("Redirigiendo a dashboard porque hay sesión activa");
+        if (currentUser.correo === 'admin@xbox.com') {
+            switchView('view-admin-dashboard');
+        } else {
+            switchView('view-user-dashboard');
+        }
+        return;
+    }
+
+    // 2. Ocultar/mostrar las vistas
+    const views = ['view-home', 'view-user-login', 'view-admin-login', 'view-user-dashboard', 'view-admin-dashboard'];
+    views.forEach(v => document.getElementById(v).classList.add('hidden'));
+    document.getElementById(viewId).classList.remove('hidden');
+
+    // 3. Controlar visibilidad de los botones según autenticación
+    const btnHome = document.getElementById('btn-home');
+    const btnLogout = document.getElementById('btn-logout');
+    console.log("btnHome:", btnHome);
+    console.log("btnLogout:", btnLogout);
+
+    if (currentUser) {
+        console.log("Sesión activa: ocultar Inicio, mostrar Cerrar Sesión");
+        if (btnHome) btnHome.classList.add('hidden');
+        if (btnLogout) btnLogout.classList.remove('hidden');
+    } else {
+        console.log("Sin sesión: mostrar Inicio, ocultar Cerrar Sesión");
+        if (btnHome) btnHome.classList.remove('hidden');
+        if (btnLogout) btnLogout.classList.add('hidden');
+    }
+
+    // 4. Renderizar contenido específico de cada dashboard
+    if (viewId === 'view-admin-dashboard') renderAdminTable();
+    if (viewId === 'view-user-dashboard' && currentUser) renderUserDashboard();
+}
         function logout() {
             currentUser = null;
             switchView('view-home');
@@ -556,12 +583,11 @@ async function handleUserRegister(e) {
 }
 
 
-    async function handleAdminLogin(e) {
+async function handleAdminLogin(e) {
     e.preventDefault();
     const email = document.getElementById('admin-email').value.trim();
     const pass = document.getElementById('admin-pass').value;
 
-    // Solo permitir el correo de admin
     if (email !== 'admin@xbox.com') {
         showToast("❌ Credenciales de administrador inválidas", "error");
         return;
@@ -570,17 +596,35 @@ async function handleUserRegister(e) {
     try {
         // Intentar iniciar sesión con Firebase Auth
         await auth.signInWithEmailAndPassword(email, pass);
-        // Si funciona, entrar al dashboard
+
+        // --- ASIGNAR currentUser DESPUÉS DEL LOGIN ---
+        const user = auth.currentUser;
+        currentUser = {
+            id: user.uid,
+            uid: user.uid,
+            correo: email,
+            nombre: "Administrador",
+        };
+
+        updateNavButtons(); // <-- AGREGADO AQUÍ
         switchView('view-admin-dashboard');
         showToast("🔐 Acceso de Administrador concedido", "success");
         e.target.reset();
         renderAdminTable();
+
     } catch (error) {
         // Si el usuario no existe en Auth, créalo automáticamente
         if (error.code === 'auth/user-not-found') {
             try {
                 await auth.createUserWithEmailAndPassword(email, pass);
-                // Después de crearlo, ya queda autenticado
+                const user = auth.currentUser;
+                currentUser = {
+                    id: user.uid,
+                    uid: user.uid,
+                    correo: email,
+                    nombre: "Administrador",
+                };
+                updateNavButtons();
                 switchView('view-admin-dashboard');
                 showToast("🛡️ Cuenta Admin creada y acceso concedido", "success");
                 e.target.reset();
@@ -885,20 +929,110 @@ async function handleUserRegister(e) {
             });
         }
 
-        // ============================================
-        // INICIALIZACIÓN
-        // ============================================
-        (function init() {
-            console.log('🎮 Xbox Lounge - Firebase');
-            initializeDatabase();
-            console.log('✅ Sistema listo!');
-        })();
 
+// ============================================
+// INICIALIZACIÓN CON RESTAURACIÓN DE SESIÓN
+// ============================================
+(async function init() {
+    console.log('🎮 Xbox Lounge - Firebase');
+
+    // 1. Inicializar la base de datos (crear usuarios semilla si no existen)
+    initializeDatabase();
+
+    // 2. Listener de autenticación para restaurar sesión al recargar
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            const uid = user.uid;
+            const email = user.email;
+            console.log('🔄 Restaurando sesión para:', email);
+
+                    if (email === 'admin@xbox.com') {
+                currentUser = {
+                    id: uid,
+                    uid: uid,
+                    correo: email,
+                    nombre: "Administrador",
+                };
+                updateNavButtons();
+                switchView('view-admin-dashboard');
+                return; // Sale sin buscar en la DB
+            }
+            
+            // ============================================
+            // CASO ESPECIAL: ADMINISTRADOR
+            // ============================================
+            if (email === 'admin@xbox.com') {
+                currentUser = {
+                    id: uid,
+                    uid: uid,
+                    correo: email,
+                    nombre: "Administrador",
+                };
+                updateNavButtons();
+                switchView('view-admin-dashboard');
+                console.log('✅ Sesión de admin restaurada');
+                return; // Salir para no buscar en la DB
+            }
+
+            // ============================================
+            // USUARIO NORMAL: BUSCAR EN LA DB
+            // ============================================
+            try {
+                const userSnapshot = await database.ref('users/' + uid).once('value');
+                const userData = userSnapshot.val();
+
+                if (userData && isValidUser(userData)) {
+                    currentUser = {
+                        ...userData,
+                        id: uid,
+                        uid: uid
+                    };
+
+                    updateNavButtons();
+                    switchView('view-user-dashboard');
+                    console.log('✅ Sesión de usuario restaurada');
+                } else {
+                    console.warn('⚠️ Usuario autenticado pero sin datos en DB');
+                    currentUser = null;
+                    await auth.signOut();
+                    switchView('view-home');
+                }
+            } catch (error) {
+                console.error('❌ Error al restaurar sesión:', error);
+                currentUser = null;
+                switchView('view-home');
+            }
+        } else {
+            console.log('👤 Sin sesión activa');
+            currentUser = null;
+            updateNavButtons();
+            switchView('view-home');
+        }
+    });
+})();
+
+
+    // ============================================
+// ACTUALIZAR BOTONES DE NAVEGACIÓN
+// ============================================
+function updateNavButtons() {
+    const btnHome = document.getElementById('btn-home');
+    const btnLogout = document.getElementById('btn-logout');
+    if (!btnHome || !btnLogout) return;
+    if (currentUser) {
+        btnHome.classList.add('hidden');
+        btnLogout.classList.remove('hidden');
+    } else {
+        btnHome.classList.remove('hidden');
+        btnLogout.classList.add('hidden');
+    }
+}
 
 
         // ============================================
         // EXPONER FUNCIONES AL ÁMBITO GLOBAL (WINDOW)
         // ============================================
+        window.updateNavButtons = updateNavButtons;
         window.switchView = switchView;
         window.logout = logout;
         window.toggleAuthTabs = toggleAuthTabs;
