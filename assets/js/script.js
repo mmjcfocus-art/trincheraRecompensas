@@ -158,10 +158,14 @@ function switchView(viewId) {
     if (viewId === 'view-admin-dashboard') renderAdminTable();
     if (viewId === 'view-user-dashboard' && currentUser) renderUserDashboard();
 }
-        function logout() {
-            currentUser = null;
-            switchView('view-home');
-            showToast("Sesión cerrada correctamente", "info");
+       async function logout() {
+            try {
+                await auth.signOut(); // Esto dispara onAuthStateChanged, que hace el resto
+                showToast("Sesión cerrada correctamente", "info");
+            } catch (error) {
+                console.error('❌ Error al cerrar sesión:', error);
+                showToast("Error al cerrar sesión", "error");
+            }
         }
 
         function toggleAuthTabs(mode) {
