@@ -236,7 +236,6 @@ let isRegistering = false;
 async function handleUserRegister(e) {
     e.preventDefault();
 
-    // Evitar envíos múltiples
     if (isRegistering) {
         showToast("Ya se está procesando tu registro, espera un momento...", "info");
         return;
@@ -267,41 +266,40 @@ async function handleUserRegister(e) {
 
     const normalizedEmail = correo.toLowerCase();
     const sanitizedPhone = sanitizePhone(telefono);
-    const dbRef = database.ref('users');
 
-    // Bloquear el botón
     isRegistering = true;
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerText;
     submitBtn.innerText = "Registrando...";
     submitBtn.disabled = true;
 
+    let credential = null;
+
     try {
-        // 1. Verificar si el correo ya existe en la base de datos
-        const emailSnapshot = await dbRef.orderByChild('correo').equalTo(normalizedEmail).once('value');
-        if (emailSnapshot.exists()) {
-            showToast("Este correo ya está registrado en el sistema", "error");
-            isRegistering = false;
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
-            return;
-        }
-
-        // 2. Verificar si el teléfono ya existe
-        const phoneSnapshot = await dbRef.orderByChild('telefono').equalTo(sanitizedPhone).once('value');
-        if (phoneSnapshot.exists()) {
-            showToast("Este teléfono ya está registrado", "error");
-            isRegistering = false;
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
-            return;
-        }
-
-        // 3. Crear la cuenta en Firebase Authentication
-        const credential = await auth.createUserWithEmailAndPassword(normalizedEmail, contrasena);
+        // ============================================
+        // PASO 1: Crear la cuenta en Firebase Auth PRIMERO
+        // (Firebase verifica que el correo no exista en Auth)
+        // ============================================
+        credential = await auth.createUserWithEmailAndPassword(normalizedEmail, contrasena);
         const uid = credential.user.uid;
 
-        // 4. Guardar los datos del usuario en Realtime Database usando el UID como clave
+        // ============================================
+        // PASO 2: Ahora que el usuario está autenticado,
+        // podemos leer la DB para verificar el teléfono duplicado
+        // ============================================
+        const dbRef = database.ref('users');
+        const phoneSnapshot = await dbRef.orderByChild('telefono').equalTo(sanitizedPhone).once('value');
+
+        if (phoneSnapshot.exists()) {
+            // Si el teléfono ya existe, borramos la cuenta de Auth que acabamos de crear
+            await credential.user.delete();
+            showToast("Este teléfono ya está registrado con otra cuenta", "error");
+            return;
+        }
+
+        // ============================================
+        // PASO 3: Guardar los datos del usuario en la DB
+        // ============================================
         const avatars = ["helmet", "cyborg", "ninja"];
         const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
         const newUser = {
@@ -316,11 +314,11 @@ async function handleUserRegister(e) {
             fecha_registro: new Date().toISOString()
         };
 
-        // Usamos set() con un "check" adicional para evitar duplicados en el caso de concurrencia
-        const userRef = database.ref('users/' + uid);
-        await userRef.set(newUser);
+        await database.ref('users/' + uid).set(newUser);
 
-        // 5. Éxito
+        // ============================================
+        // PASO 4: Éxito
+        // ============================================
         showToast("✅ Registro exitoso. ¡Inicia sesión para ver tu tarjeta!", "success");
         toggleAuthTabs('login');
         e.target.reset();
@@ -328,14 +326,17 @@ async function handleUserRegister(e) {
     } catch (error) {
         console.error("Error en registro:", error);
         let message = "No fue posible registrar el usuario";
+
         if (error.code === 'auth/email-already-in-use') {
-            message = "Este correo ya está registrado en Firebase Auth";
+            message = "Este correo ya está registrado. Intenta iniciar sesión.";
         } else if (error.code === 'auth/weak-password') {
             message = "La contraseña es demasiado débil. Debe tener al menos 6 caracteres.";
+        } else if (error.code === 'auth/network-request-failed') {
+            message = "Error de conexión. Revisa tu internet.";
         }
+
         showToast(message, "error");
     } finally {
-        // Restaurar el botón siempre, incluso si hay error
         isRegistering = false;
         submitBtn.innerText = originalText;
         submitBtn.disabled = false;
