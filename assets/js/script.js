@@ -356,24 +356,77 @@ e.target.reset();
 // Asegurarse de que la vista de login siga visible
 switchView('view-user-login');
 
-    } catch (error) {
-        console.error("Error en registro:", error);
-        let message = "No fue posible registrar el usuario";
+  } catch (error) {
+    console.error("Error en registro:", error);
 
-        if (error.code === 'auth/email-already-in-use') {
-            message = "Este correo ya está registrado. Intenta iniciar sesión.";
-        } else if (error.code === 'auth/weak-password') {
-            message = "La contraseña es demasiado débil. Debe tener al menos 6 caracteres.";
-        } else if (error.code === 'auth/network-request-failed') {
-            message = "Error de conexión. Revisa tu internet.";
+    // ============================================
+    // CASO ESPECIAL: El correo ya existe en Auth
+    // Intentamos recuperar la cuenta si es huérfana (sin datos en DB)
+    // ============================================
+    if (error.code === 'auth/email-already-in-use') {
+        try {
+            // Intentar iniciar sesión con ese correo y contraseña
+            const existingCredential = await auth.signInWithEmailAndPassword(normalizedEmail, contrasena);
+            const existingUid = existingCredential.user.uid;
+
+            // Verificar si ya tiene datos en la DB
+            const existingUserSnapshot = await database.ref('users/' + existingUid).once('value');
+            const existingUserData = existingUserSnapshot.val();
+
+            if (existingUserData && isValidUser(existingUserData)) {
+                // Ya existe completamente → error
+                await auth.signOut();
+                showToast("Este correo ya está registrado. Inicia sesión.", "error");
+                return;
+            }
+
+            // Es huérfano (existe en Auth pero no en DB) → crear su perfil
+            const avatars = ["helmet", "cyborg", "ninja"];
+            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+            const recoveredUser = {
+                id: existingUid,
+                uid: existingUid,
+                nombre: sanitizeText(nombre),
+                correo: normalizedEmail,
+                telefono: sanitizedPhone,
+                sellos: 0,
+                horas_gratis: 0,
+                avatar: randomAvatar,
+                fecha_registro: new Date().toISOString()
+            };
+
+            await database.ref('users/' + existingUid).set(recoveredUser);
+            await auth.signOut();
+
+            showToast("✅ Cuenta recuperada. ¡Ahora inicia sesión!", "success");
+            toggleAuthTabs('login');
+            e.target.reset();
+            return;
+
+        } catch (signInError) {
+            // La contraseña no coincide con la cuenta existente
+            await auth.signOut();
+            showToast("Este correo ya está registrado con otra contraseña. Intenta recuperarla.", "error");
+            return;
         }
-
-        showToast(message, "error");
-    } finally {
-        isRegistering = false;
-        submitBtn.innerText = originalText;
-        submitBtn.disabled = false;
     }
+
+    // ============================================
+    // OTROS ERRORES
+    // ============================================
+    let message = "No fue posible registrar el usuario";
+    if (error.code === 'auth/weak-password') {
+        message = "La contraseña es demasiado débil. Debe tener al menos 6 caracteres.";
+    } else if (error.code === 'auth/network-request-failed') {
+        message = "Error de conexión. Revisa tu internet.";
+    }
+    showToast(message, "error");
+} finally {
+    // Restaurar el botón siempre, incluso si hay error
+    isRegistering = false;
+    submitBtn.innerText = originalText;
+    submitBtn.disabled = false;
+}
 }
 
 
@@ -566,7 +619,11 @@ function eliminarUsuario(id) {
         showConfirm("Eliminar Cliente", `¿Eliminar permanentemente a ${user.nombre}?`, () => {
             deleteUser(id, () => {
                 renderAdminTable();
-                if (currentUser && currentUser.id === id) { currentUser = null; switchView('view-home'); showToast("Tu cuenta ha sido eliminada", "info"); } else { showToast(`🗑️ ${user.nombre} removido`, "success"); }
+                showToast(`🗑️ ${user.nombre} removido de la DB`, "success");
+                // Aviso importante para el admin:
+                setTimeout(() => {
+                    showToast("⚠️ Recuerda eliminar también su cuenta en Firebase Console > Authentication", "info");
+                }, 1500);
             });
         });
     });
