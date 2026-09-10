@@ -316,12 +316,17 @@ async function handleUserRegister(e) {
         const dbRef = database.ref('users');
         const phoneSnapshot = await dbRef.orderByChild('telefono').equalTo(sanitizedPhone).once('value');
 
-        if (phoneSnapshot.exists()) {
-            // Si el teléfono ya existe, borramos la cuenta de Auth que acabamos de crear
-            await credential.user.delete();
-            showToast("Este teléfono ya está registrado con otra cuenta", "error");
-            return;
-        }
+       if (phoneSnapshot.exists()) {
+    await credential.user.delete();
+    showToast("Este teléfono ya está registrado con otra cuenta", "error");
+    
+    // Forzar que se mantenga en la vista de registro
+    setTimeout(() => {
+        switchView('view-user-login');
+        toggleAuthTabs('register');
+    }, 200);
+    return;
+}
 
         // ============================================
         // PASO 3: Guardar los datos del usuario en la DB
@@ -791,58 +796,73 @@ function renderAdminTable() {
     initializeDatabase();
 
     // 2. Listener de autenticación para restaurar sesión al recargar
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            const uid = user.uid;
-            const email = user.email;
-            console.log('🔄 Restaurando sesión para:', email);
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        const uid = user.uid;
+        const email = user.email;
+        console.log('🔄 Restaurando sesión para:', email);
 
-            // Admin
-            if (email === 'admin@xbox.com') {
+        // Admin
+        if (email === 'admin@xbox.com') {
+            currentUser = {
+                id: uid,
+                uid: uid,
+                correo: email,
+                nombre: "Administrador",
+            };
+            updateNavButtons();
+            switchView('view-admin-dashboard');
+            return;
+        }
+
+        // Usuario normal
+        try {
+            const userSnapshot = await database.ref('users/' + uid).once('value');
+            const userData = userSnapshot.val();
+
+            if (userData && isValidUser(userData)) {
                 currentUser = {
+                    ...userData,
                     id: uid,
-                    uid: uid,
-                    correo: email,
-                    nombre: "Administrador",
+                    uid: uid
                 };
                 updateNavButtons();
-                switchView('view-admin-dashboard');
-                return;
-            }
-
-            // Usuario normal
-            try {
-                const userSnapshot = await database.ref('users/' + uid).once('value');
-                const userData = userSnapshot.val();
-
-                if (userData && isValidUser(userData)) {
-                    currentUser = {
-                        ...userData,
-                        id: uid,
-                        uid: uid
-                    };
-                    updateNavButtons();
-                    switchView('view-user-dashboard');
-                } else {
-    currentUser = null;
-    updateNavButtons();
-
-    // Si estamos en proceso de registro, NO cambiar de vista
-    if (!isRegistering) {
-        switchView('view-home');
-    }
-}
-            } catch (error) {
-                console.error('❌ Error al restaurar sesión:', error);
+                switchView('view-user-dashboard');
+            } else {
                 currentUser = null;
+                updateNavButtons();
+                if (!isRegistering) {
+                    switchView('view-home');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error al restaurar sesión:', error);
+            currentUser = null;
+            if (!isRegistering) {
                 switchView('view-home');
             }
-        } else {
-            currentUser = null;
-            updateNavButtons();
-            switchView('view-home');
         }
-    });
+    } else {
+        currentUser = null;
+        updateNavButtons();
+
+        // ============================================
+        // NO CAMBIAR DE VISTA SI EL USUARIO ESTÁ EN REGISTRO
+        // ============================================
+        const registerView = document.getElementById('view-user-login');
+        const isRegisterViewVisible = registerView && !registerView.classList.contains('hidden');
+        const registerCard = document.getElementById('card-register');
+        const isRegisterTabActive = registerCard && !registerCard.classList.contains('hidden');
+
+        // Si está en proceso de registro O la pantalla de registro está visible, NO cambiar
+        if (isRegistering || (isRegisterViewVisible && isRegisterTabActive)) {
+            console.log('⏸️ Registro en curso, no cambiar de vista');
+            return;
+        }
+
+        switchView('view-home');
+    }
+});
 })();
 
 
