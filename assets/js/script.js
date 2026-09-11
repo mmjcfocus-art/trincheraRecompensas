@@ -35,22 +35,7 @@ let currentUser = null;
 
 
 
-// ============================================
-// FUNCIONES DE BASE DE DATOS FIREBASE
-// ============================================
-function initializeDatabase() {
-    const dbRef = database.ref('users');
-    dbRef.once('value', (snapshot) => {
-        if (!snapshot.exists()) {
-            console.log('🆕 Inicializando DB con usuarios semilla');
-            const updates = {};
-            SEED_USERS.forEach(user => { updates[user.id] = user; });
-            dbRef.update(updates);
-        } else {
-            console.log('✅ Base de datos ya inicializada');
-        }
-    });
-}
+
 
 function saveUser(user, callback) {
     const userRef = database.ref('users/' + user.id);
@@ -92,16 +77,9 @@ function resetDatabase() {
 
 
 
-// ============================================
-// NAVEGACIÓN
-// ============================================
 function switchView(viewId) {
-    console.log("switchView llamada con viewId:", viewId);
-    console.log("currentUser:", currentUser);
-
     // 1. Si el usuario está autenticado y quiere ir a vistas públicas, redirigir al dashboard
     if (currentUser && (viewId === 'view-home' || viewId === 'view-user-login' || viewId === 'view-admin-login')) {
-        console.log("Redirigiendo a dashboard porque hay sesión activa");
         if (currentUser.correo === 'admin@xbox.com') {
             switchView('view-admin-dashboard');
         } else {
@@ -118,15 +96,11 @@ function switchView(viewId) {
     // 3. Controlar visibilidad de los botones según autenticación
     const btnHome = document.getElementById('btn-home');
     const btnLogout = document.getElementById('btn-logout');
-    console.log("btnHome:", btnHome);
-    console.log("btnLogout:", btnLogout);
 
     if (currentUser) {
-        console.log("Sesión activa: ocultar Inicio, mostrar Cerrar Sesión");
         if (btnHome) btnHome.classList.add('hidden');
         if (btnLogout) btnLogout.classList.remove('hidden');
     } else {
-        console.log("Sin sesión: mostrar Inicio, ocultar Cerrar Sesión");
         if (btnHome) btnHome.classList.remove('hidden');
         if (btnLogout) btnLogout.classList.add('hidden');
     }
@@ -790,79 +764,11 @@ function renderAdminTable() {
 // INICIALIZACIÓN CON RESTAURACIÓN DE SESIÓN
 // ============================================
 (async function init() {
-    console.log('🎮 Xbox Lounge - Firebase');
+    console.log('🎮 LaTrinchera Gaming Club - Sistema listo');
 
-    // 1. Inicializar la base de datos (crear usuarios semilla si no existen)
-    initializeDatabase();
-
-    // 2. Listener de autenticación para restaurar sesión al recargar
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        const uid = user.uid;
-        const email = user.email;
-        console.log('🔄 Restaurando sesión para:', email);
-
-        // Admin
-        if (email === 'admin@xbox.com') {
-            currentUser = {
-                id: uid,
-                uid: uid,
-                correo: email,
-                nombre: "Administrador",
-            };
-            updateNavButtons();
-            switchView('view-admin-dashboard');
-            return;
-        }
-
-        // Usuario normal
-        try {
-            const userSnapshot = await database.ref('users/' + uid).once('value');
-            const userData = userSnapshot.val();
-
-            if (userData && isValidUser(userData)) {
-                currentUser = {
-                    ...userData,
-                    id: uid,
-                    uid: uid
-                };
-                updateNavButtons();
-                switchView('view-user-dashboard');
-            } else {
-                currentUser = null;
-                updateNavButtons();
-                if (!isRegistering) {
-                    switchView('view-home');
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error al restaurar sesión:', error);
-            currentUser = null;
-            if (!isRegistering) {
-                switchView('view-home');
-            }
-        }
-    } else {
-        currentUser = null;
-        updateNavButtons();
-
-        // ============================================
-        // NO CAMBIAR DE VISTA SI EL USUARIO ESTÁ EN REGISTRO
-        // ============================================
-        const registerView = document.getElementById('view-user-login');
-        const isRegisterViewVisible = registerView && !registerView.classList.contains('hidden');
-        const registerCard = document.getElementById('card-register');
-        const isRegisterTabActive = registerCard && !registerCard.classList.contains('hidden');
-
-        // Si está en proceso de registro O la pantalla de registro está visible, NO cambiar
-        if (isRegistering || (isRegisterViewVisible && isRegisterTabActive)) {
-            console.log('⏸️ Registro en curso, no cambiar de vista');
-            return;
-        }
-
-        switchView('view-home');
-    }
-});
+    auth.onAuthStateChanged(async (user) => {
+        // ... tu listener actual
+    });
 })();
 
 
