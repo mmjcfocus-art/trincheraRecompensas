@@ -767,7 +767,66 @@ function renderAdminTable() {
     console.log('🎮 LaTrinchera Gaming Club - Sistema listo');
 
     auth.onAuthStateChanged(async (user) => {
-        // ... tu listener actual
+        if (user) {
+            const uid = user.uid;
+            const email = user.email;
+
+            // Admin
+            if (email === 'admin@xbox.com') {
+                currentUser = {
+                    id: uid,
+                    uid: uid,
+                    correo: email,
+                    nombre: "Administrador",
+                };
+                updateNavButtons();
+                switchView('view-admin-dashboard');
+                return;
+            }
+
+            // Usuario normal
+            try {
+                const userSnapshot = await database.ref('users/' + uid).once('value');
+                const userData = userSnapshot.val();
+
+                if (userData && isValidUser(userData)) {
+                    currentUser = {
+                        ...userData,
+                        id: uid,
+                        uid: uid
+                    };
+                    updateNavButtons();
+                    switchView('view-user-dashboard');
+                } else {
+                    currentUser = null;
+                    updateNavButtons();
+                    if (!isRegistering) {
+                        switchView('view-home');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error al restaurar sesión:', error);
+                currentUser = null;
+                if (!isRegistering) {
+                    switchView('view-home');
+                }
+            }
+        } else {
+            currentUser = null;
+            updateNavButtons();
+
+            // No cambiar de vista si hay un registro en curso
+            const registerView = document.getElementById('view-user-login');
+            const isRegisterViewVisible = registerView && !registerView.classList.contains('hidden');
+            const registerCard = document.getElementById('card-register');
+            const isRegisterTabActive = registerCard && !registerCard.classList.contains('hidden');
+
+            if (isRegistering || (isRegisterViewVisible && isRegisterTabActive)) {
+                return;
+            }
+
+            switchView('view-home');
+        }
     });
 })();
 
@@ -791,8 +850,8 @@ function updateNavButtons() {
 
 // ============================================
 // EXPONER FUNCIONES AL ÁMBITO GLOBAL (WINDOW)
+// Solo las funciones que el HTML llama en onclick / oninput
 // ============================================
-window.updateNavButtons = updateNavButtons;
 window.switchView = switchView;
 window.logout = logout;
 window.toggleAuthTabs = toggleAuthTabs;
@@ -810,11 +869,3 @@ window.resetDatabase = resetDatabase;
 window.renderAdminTable = renderAdminTable;
 window.showToast = showToast;
 window.showConfirm = showConfirm;
-window.getGamerAvatarSvg = getGamerAvatarSvg;
-
-
-window.debug = {
-    database: database,
-    resetDatabase: resetDatabase,
-    SEED_USERS: SEED_USERS
-};
