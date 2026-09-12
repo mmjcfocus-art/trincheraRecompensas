@@ -283,6 +283,34 @@
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-8">
             <button onclick="closeUserModal()" class="absolute right-4 top-4 text-slate-400 hover:text-white cursor-pointer transition-colors p-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l1.414 1.414a1 1 0 11-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
             <div><h3 id="modal-title" class="text-lg sm:text-xl font-black text-white">Registrar Cliente</h3><p class="text-xs text-slate-400 mt-1">Completa los campos del usuario en la base de datos de lealtad.</p></div>
+            
+            <!-- ============================================ -->
+            <!-- QR DE REGISTRO RÁPIDO (solo en modo "Nuevo Cliente") -->
+            <!-- ============================================ -->
+            <div id="modal-qr-section" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
+                <div class="flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Registro rápido por QR</span>
+                </div>
+                <div class="bg-white p-2 rounded-xl inline-block shadow-lg">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://mmjcfocus-art.github.io/trincheraRecompensas/?register=true&color=107C10&bgcolor=ffffff&margin=5"
+                        alt="QR Registro" class="w-32 h-32 block" />
+                </div>
+                <p class="text-[10px] text-slate-500 leading-tight px-2">
+                    📱 El cliente escanea este código desde su celular y se registra solo. ¡Tú solo verifícalo en la tabla!
+                </p>
+                <div class="flex items-center gap-2 text-[10px] text-slate-500 pt-1">
+                    <div class="flex-1 h-px bg-slate-800"></div>
+                    <span class="font-bold uppercase tracking-wider">o regístralo manualmente</span>
+                    <div class="flex-1 h-px bg-slate-800"></div>
+                </div>
+            </div>
+
+
             <form onsubmit="handleModalSubmit(event)" class="space-y-4">
                 <input type="hidden" id="modal-user-id">
                 <div><label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nombre Completo / GamerTag</label><input type="text" id="modal-name" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-emerald-500"></div>
