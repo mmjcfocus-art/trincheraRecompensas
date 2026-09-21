@@ -11,6 +11,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Librería para escanear QR con la cámara -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
     <link rel="stylesheet" href="assets/css/style.css">
 
@@ -63,6 +65,7 @@
                 <button id="btn-confirm-ok" class="bg-[#107C10] hover:brightness-110 text-white px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all">Confirmar</button>
             </div>
         </div>
+      
     </div>
 
     <!-- MAIN -->
@@ -244,21 +247,56 @@
                     <div class="flex items-center justify-center gap-1.5"><span id="user-dash-rewards" class="text-2xl sm:text-3xl font-black text-emerald-400 tech-font">0</span><span class="text-xs text-slate-500 font-bold tech-font">HRS</span></div>
                 </div>
             </div>
-            <div class="bg-slate-900 p-5 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl text-center space-y-6 sm:space-y-8 relative overflow-hidden">
-                <div class="absolute inset-0 bg-[linear-gradient(to_right,#107c100d_1px,transparent_1px),linear-gradient(to_bottom,#107c100d_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none"></div>
-                <div><h3 class="text-lg sm:text-xl font-extrabold text-white tracking-tight">Tu Tarjeta Digital de Fidelidad</h3><p class="text-xs sm:text-sm text-slate-400 mt-1">Sella cada visita jugando en sala. ¡El quinto sello te regala una hora de consola!</p></div>
-                <div class="grid grid-cols-5 gap-2 sm:gap-4 max-w-xl mx-auto py-1 relative z-10" id="stamps-container"></div>
-                <div id="user-alert-container" class="pt-2"></div>
-            </div>
-        </section>
+
+<!-- ============================================ -->
+<!-- BOTÓN PARA MOSTRAR QR DE FIDELIDAD -->
+<!-- ============================================ -->
+<button onclick="openClientQR()"
+    class="w-full bg-gradient-to-r from-[#62b22f] to-emerald-600 hover:brightness-110 text-white font-bold py-3 px-5 rounded-2xl transition-all shadow-lg shadow-emerald-700/20 cursor-pointer transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+    </svg>
+    Mostrar mi QR de Fidelidad
+</button>
+
+<div
+    class="bg-slate-900 p-5 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl text-center space-y-6 sm:space-y-8 relative overflow-hidden">
+    <div
+        class="absolute inset-0 bg-[linear-gradient(to_right,#107c100d_1px,transparent_1px),linear-gradient(to_bottom,#107c100d_1px,transparent_1px)] bg-[size:14px_24px] pointer-events-none">
+    </div>
+    <div>
+        <h3 class="text-lg sm:text-xl font-extrabold text-white tracking-tight">Tu Tarjeta Digital de Fidelidad</h3>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">Sella cada visita jugando en sala. ¡El quinto sello te regala
+            una hora de consola!</p>
+    </div>
+    <div class="grid grid-cols-5 gap-2 sm:gap-4 max-w-xl mx-auto py-1 relative z-10" id="stamps-container"></div>
+    <div id="user-alert-container" class="pt-2"></div>
+</div>
+</section>
 
         <!-- PANEL ADMIN -->
         <section id="view-admin-dashboard" class="hidden w-full space-y-6 animate-fade-in">
             <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-slate-900 p-4 sm:p-6 rounded-3xl border border-slate-800 shadow-2xl">
                 <div><div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span><h2 class="text-lg sm:text-xl font-black text-white tracking-tight">Consola de Operaciones Gamer</h2></div><p class="text-xs text-slate-400 mt-1">Gestiona de forma interactiva las visitas de tus clientes, recarga sellos y reclama horas.</p></div>
-                <div class="flex gap-2">
-                    <button onclick="resetDatabase()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-95">🔄 Resetear DB</button>
-                    <button onclick="openUserModal()" class="bg-[#107C10] hover:brightness-110 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-xl cursor-pointer transition-all shadow-lg active:scale-95 text-center">+ Registrar Nuevo Cliente</button>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="resetDatabase()"
+                        class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs font-bold px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-95">🔄
+                        Resetear DB</button>
+                    <button onclick="openQRScanner()"
+                        class="bg-[#62b22f] hover:brightness-110 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-xl cursor-pointer transition-all shadow-lg active:scale-95 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Escanear QR
+                    </button>
+                    <button onclick="openUserModal()"
+                        class="bg-[#107C10] hover:brightness-110 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-xl cursor-pointer transition-all shadow-lg active:scale-95 text-center">+
+                        Registrar Nuevo Cliente</button>
                 </div>
             </div>
             <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden">
@@ -321,7 +359,107 @@
             </form>
         </div>
     </div>
+    <!-- ============================================ -->
+<!-- MODAL ESCÁNER QR (Admin) -->
+<!-- ============================================ -->
+<div id="qr-scanner-modal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl relative my-8">
+        
+        <!-- Botón cerrar -->
+        <button onclick="closeQRScanner()" class="absolute right-4 top-4 text-slate-400 hover:text-white cursor-pointer transition-colors p-1 z-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l1.414 1.414a1 1 0 11-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
 
+        <!-- Encabezado -->
+        <div class="text-center space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 inline-block">Modo Operador</span>
+            <h3 class="text-lg sm:text-xl font-black text-white">Escanear QR del Cliente</h3>
+            <p class="text-xs text-slate-400">Apunta la cámara al código QR que muestra el cliente en su celular.</p>
+        </div>
+
+        <!-- Área de la cámara -->
+        <div id="qr-reader" class="w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-800"></div>
+
+        <!-- Resultado (oculto al inicio) -->
+        <div id="qr-result" class="hidden bg-emerald-950/30 border border-emerald-800/40 rounded-2xl p-4 space-y-3">
+            <div class="text-center">
+                <span class="block text-[9px] text-slate-500 uppercase font-bold tracking-wider mb-1">Cliente identificado</span>
+                <span id="qr-result-name" class="text-base font-extrabold text-white">---</span>
+                <div id="qr-result-info" class="text-[10px] text-slate-400 mt-1"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="qrActionStamp()" class="bg-[#107C10] hover:brightness-110 text-white text-xs font-bold py-2.5 rounded-xl cursor-pointer transition-all active:scale-95">
+                    +1 Sello
+                </button>
+                <button onclick="qrActionRedeem()" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold py-2.5 rounded-xl cursor-pointer transition-all active:scale-95">
+                    Canjear Hora
+                </button>
+            </div>
+
+            <button onclick="resetQRScanner()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold py-2 rounded-xl cursor-pointer transition-all">
+                Escanear otro
+            </button>
+        </div>
+
+        <!-- Instrucciones (visibles solo al inicio) -->
+        <div id="qr-instructions" class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center">
+            <p class="text-[10px] text-slate-400 leading-relaxed">
+                💡 <strong>Tip:</strong> Si el escáner no enfoca, acerca el celular al QR.<br>
+                También puedes registrar al cliente manualmente con el botón <strong>"+ Registrar Nuevo Cliente"</strong>.
+            </p>
+        </div>
+    </div>
+</div>
+
+    <!-- ============================================ -->
+<!-- MODAL QR DEL CLIENTE -->
+<!-- ============================================ -->
+<div id="client-qr-modal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative text-center">
+        
+        <!-- Botón de cerrar -->
+        <button onclick="closeClientQR()" class="absolute right-4 top-4 text-slate-400 hover:text-white cursor-pointer transition-colors p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l1.414 1.414a1 1 0 11-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+
+
+        <!-- Encabezado -->
+        <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 inline-block">
+                Tarjeta Digital
+            </span>
+            <h3 class="text-xl font-black text-white">Tu Código QR</h3>
+            <p class="text-xs text-slate-400">Muestra este código al encargado para registrar tu visita o canjear tus horas.</p>
+        </div>
+
+        <!-- Nombre del cliente -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3">
+            <span class="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">Cliente</span>
+            <span id="client-qr-name" class="text-sm font-extrabold text-white">---</span>
+        </div>
+
+        <!-- QR -->
+        <div class="bg-white p-4 rounded-2xl inline-block shadow-2xl">
+            <img id="client-qr-image" src="" alt="Código QR" class="w-56 h-56 block" />
+        </div>
+
+        <!-- Instrucciones -->
+        <div class="bg-emerald-950/30 border border-emerald-800/40 rounded-2xl p-3 text-left">
+            <p class="text-[10px] text-emerald-300 leading-relaxed">
+                📱 <strong>¿Cómo funciona?</strong><br>
+                1. El encargado escanea este código con su dispositivo.<br>
+                2. Se registra tu visita (+1 sello) o se canjea una hora.<br>
+                3. <strong>No compartas este código</strong> con otras personas.
+            </p>
+        </div>
+
+        <!-- Botón cerrar -->
+        <button onclick="closeClientQR()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs cursor-pointer transition-all">
+            Cerrar
+        </button>
+    </div>
+</div>
     <!-- FOOTER -->
     <footer class="bg-slate-950/80 border-t border-slate-900 py-6 text-center text-xs text-slate-500 w-full mt-12">
         <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4"><p>&copy; 2026 Xbox Lounge Loyalty Program. Todos los derechos reservados.</p><div class="flex gap-4"></div></div>

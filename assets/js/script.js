@@ -761,6 +761,158 @@ function renderAdminTable() {
 
 
 // ============================================
+// QR DEL CLIENTE (Mostrar)
+// ============================================
+function openClientQR() {
+    if (!currentUser || !currentUser.uid) {
+        showToast("Error: Sesión no válida", "error");
+        return;
+    }
+
+    const modal = document.getElementById('client-qr-modal');
+    const nameEl = document.getElementById('client-qr-name');
+    const imgEl = document.getElementById('client-qr-image');
+
+    // Nombre del cliente
+    nameEl.innerText = currentUser.nombre || "Cliente";
+
+    // Generar el QR con el UID del cliente
+    // Usamos api.qrserver.com para generar el QR desde el UID
+    const uid = currentUser.uid;
+    const qrData = `LTX-${uid}`; // Prefijo "LTX-" para que el admin sepa que es de LaTrinchera
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}&color=107C10&bgcolor=ffffff&margin=10`;
+    
+    imgEl.src = qrUrl;
+
+    modal.classList.remove('hidden');
+}
+
+function closeClientQR() {
+    const modal = document.getElementById('client-qr-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// ============================================
+// ESCÁNER QR (Admin)
+// ============================================
+let html5QrCode = null;
+let scannedUser = null; // Guarda el usuario detectado
+
+async function openQRScanner() {
+    const modal = document.getElementById('qr-scanner-modal');
+    modal.classList.remove('hidden');
+    
+    // Resetear estado
+    resetQRScanner();
+
+    // Iniciar el escáner
+    try {
+        html5QrCode = new Html5Qrcode("qr-reader");
+        await html5QrCode.start(
+            { facingMode: "environment" }, // Usar la cámara trasera
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            (decodedText) => {
+                // Callback cuando detecta un QR
+                handleQRResult(decodedText);
+            },
+            (errorMessage) => {
+                // Ignorar errores de escaneo (se lanzan constantemente mientras busca)
+            }
+        );
+    } catch (err) {
+        console.error("Error iniciando cámara:", err);
+        showToast("No se pudo acceder a la cámara. Revisa los permisos.", "error");
+        closeQRScanner();
+    }
+}
+
+async function closeQRScanner() {
+    if (html5QrCode) {
+        try {
+            await html5QrCode.stop();
+            html5QrCode.clear();
+        } catch (err) {
+            console.error("Error deteniendo cámara:", err);
+        }
+        html5QrCode = null;
+    }
+    const modal = document.getElementById('qr-scanner-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function resetQRScanner() {
+    scannedUser = null;
+    document.getElementById('qr-result').classList.add('hidden');
+    document.getElementById('qr-instructions').classList.remove('hidden');
+}
+
+async function handleQRResult(decodedText) {
+    console.log("QR detectado:", decodedText);
+
+    // Validar que sea un QR de LaTrinchera
+    if (!decodedText.startsWith('LTX-')) {
+        showToast("Este QR no pertenece a LaTrinchera", "error");
+        return;
+    }
+
+    const uid = decodedText.replace('LTX-', '');
+
+    // Pausar el escáner mientras procesamos
+    if (html5QrCode) {
+        try { await html5QrCode.pause(); } catch(e) {}
+    }
+
+    // Buscar al usuario en la DB
+    try {
+        const snapshot = await database.ref('users/' + uid).once('value');
+        const user = snapshot.val();
+
+        if (!user || !isValidUser(user)) {
+            showToast("Cliente no encontrado en la base de datos", "error");
+            // Reanudar escáner
+            if (html5QrCode) { try { await html5QrCode.resume(); } catch(e) {} }
+            return;
+        }
+
+        // Mostrar los datos del cliente en el modal
+        scannedUser = { ...user, id: uid, uid: uid };
+        document.getElementById('qr-result-name').innerText = user.nombre;
+        document.getElementById('qr-result-info').innerHTML = `
+            <div>📧 ${user.correo}</div>
+            <div>📱 ${user.telefono}</div>
+            <div class="mt-1 text-emerald-400 font-bold">🎁 ${user.horas_gratis} horas · ${user.sellos}/${MAX_STAMPS} sellos</div>
+        `;
+
+        document.getElementById('qr-result').classList.remove('hidden');
+        document.getElementById('qr-instructions').classList.add('hidden');
+
+    } catch (err) {
+        console.error("Error buscando cliente:", err);
+        showToast("Error al buscar al cliente", "error");
+        if (html5QrCode) { try { await html5QrCode.resume(); } catch(e) {} }
+    }
+}
+
+async function qrActionStamp() {
+    if (!scannedUser) return;
+    // Cerrar el escáner antes de ejecutar la acción
+    await closeQRScanner();
+    // Ejecutar la misma función que ya tienes para agregar sellos
+    liberarConsumo(scannedUser.id);
+}
+
+async function qrActionRedeem() {
+    if (!scannedUser) return;
+    // Cerrar el escáner antes de ejecutar la acción
+    await closeQRScanner();
+    // Ejecutar la misma función que ya tienes para canjear horas
+    cobrarPremio(scannedUser.id);
+}
+
+// ============================================
 // INICIALIZACIÓN CON RESTAURACIÓN DE SESIÓN
 // ============================================
 (async function init() {
@@ -869,3 +1021,11 @@ window.resetDatabase = resetDatabase;
 window.renderAdminTable = renderAdminTable;
 window.showToast = showToast;
 window.showConfirm = showConfirm;
+window.openClientQR = openClientQR;
+window.closeClientQR = closeClientQR;
+
+window.openQRScanner = openQRScanner;
+window.closeQRScanner = closeQRScanner;
+window.resetQRScanner = resetQRScanner;
+window.qrActionStamp = qrActionStamp;
+window.qrActionRedeem = qrActionRedeem;
